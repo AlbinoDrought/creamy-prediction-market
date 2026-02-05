@@ -8,14 +8,22 @@ export interface User {
     tokens: number;
 }
 
+export interface LeaderboardUser {
+    id: string;
+    name: string;
+    tokens: number;
+    rank: number;
+}
+
 export interface TokenLog {
     id: string;
     created_at: string;
     user_id: string;
     change: number;
     cause: TokenChangeCause;
-    /** BetID is set if cause is TokenChangeCauseBetPlaced, TokenChangeCauseBetWon, or TokenChangeCauseBetVoided */
+    /** BetID and PredictionID are set if cause is TokenChangeCauseBetPlaced, TokenChangeCauseBetWon, or TokenChangeCauseBetVoided */
     bet_id: string;
+    prediction_id: string;
 }
 
 export const TokenChangeCause = {

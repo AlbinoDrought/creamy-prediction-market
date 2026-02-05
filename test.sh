@@ -64,9 +64,9 @@ else
     fail "GET /api/predictions" "$PREDICTIONS"
 fi
 
-# Test: List users (leaderboard - should be empty, admin excluded)
-info "Testing GET /api/users (leaderboard)"
-USERS=$(request GET "/api/users")
+# Test: Leaderboard
+info "Testing GET /api/leaderboard"
+USERS=$(request GET "/api/leaderboard")
 if echo "$USERS" | jq -e '. | type == "array"' > /dev/null 2>&1; then
     pass "GET /api/users returns array"
 else
@@ -209,6 +209,15 @@ if echo "$UPDATE_PRED" | jq -e '.description == "Updated description"' > /dev/nu
     pass "PUT /api/admin/predictions/{id} updated"
 else
     fail "PUT /api/admin/predictions/{id}" "$UPDATE_PRED"
+fi
+
+# Test: List all users
+info "Testing GET /api/admin/users"
+GET_USERS=$(request GET "/api/admin/users" '' "$ADMIN_TOKEN")
+if echo "$GET_USERS" | jq -e '.[0].name' | grep 'Admin' > /dev/null 2>&1; then
+    pass "GET /api/admin/users"
+else
+    fail "GET /api/admin/users" "$GET_USERS"
 fi
 
 # Test: Get single prediction
@@ -439,8 +448,8 @@ echo "========================================="
 echo "LEADERBOARD"
 echo "========================================="
 
-info "Testing GET /api/users (final leaderboard)"
-FINAL_LEADERBOARD=$(request GET "/api/users")
+info "Testing GET /api/leaderboard"
+FINAL_LEADERBOARD=$(request GET "/api/leaderboard")
 echo "$FINAL_LEADERBOARD" | jq -r '.[] | "  \(.rank). \(.name): \(.tokens) tokens"'
 pass "Leaderboard retrieved"
 

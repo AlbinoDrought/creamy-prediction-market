@@ -115,7 +115,7 @@ func (h *Handler) GetPrediction(w http.ResponseWriter, r *http.Request) {
 	h.jsonResponse(w, http.StatusOK, result)
 }
 
-func (h *Handler) ListUsers(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ShowLeaderboard(w http.ResponseWriter, r *http.Request) {
 	users := h.Store.ListUsers()
 
 	leaderboard := make([]types.LeaderboardUser, 0, len(users))
@@ -426,6 +426,12 @@ type CreatePredictionRequest struct {
 	OddsVisibleBeforeBet bool                     `json:"odds_visible_before_bet"`
 }
 
+func (h *Handler) ListUsers(w http.ResponseWriter, r *http.Request) {
+	users := h.Store.ListUsers()
+
+	h.jsonResponse(w, http.StatusOK, users)
+}
+
 func (h *Handler) CreatePrediction(w http.ResponseWriter, r *http.Request) {
 	var req CreatePredictionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -691,7 +697,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	// Public
 	mux.HandleFunc("GET /api/predictions", h.ListPredictions)
 	mux.HandleFunc("GET /api/predictions/{id}", h.GetPrediction)
-	mux.HandleFunc("GET /api/users", h.ListUsers)
+	mux.HandleFunc("GET /api/leaderboard", h.ShowLeaderboard)
 
 	// Guest
 	mux.HandleFunc("POST /api/register", h.Register)
@@ -704,6 +710,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("PUT /api/bets/{id}/amount", h.requireAuth(h.IncreaseBetAmount))
 
 	// Admin
+	mux.HandleFunc("GET /api/admin/users", h.requireAdmin(h.ListUsers))
 	mux.HandleFunc("POST /api/admin/predictions", h.requireAdmin(h.CreatePrediction))
 	mux.HandleFunc("PUT /api/admin/predictions/{id}", h.requireAdmin(h.UpdatePrediction))
 	mux.HandleFunc("POST /api/admin/predictions/{id}/close", h.requireAdmin(h.ClosePrediction))

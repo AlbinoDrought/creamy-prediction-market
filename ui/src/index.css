@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  /* Primary - Yellow for CTAs, choices, highlights */
+  --color-primary: #FACC15;
+  --color-primary-light: #FDE047;
+  --color-primary-dark: #EAB308;
+
+  /* Secondary - Purple for gradients, accents */
+  --color-secondary: #7C3AED;
+  --color-secondary-light: #A78BFA;
+  --color-secondary-dark: #6D28D9;
+
+  /* Dark - Near-black for cards, backgrounds */
+  --color-dark: #1F2937;
+  --color-dark-light: #374151;
+  --color-dark-lighter: #4B5563;
+
+  /* Success - Green for won bets */
+  --color-success: #22C55E;
+  --color-success-light: #4ADE80;
+  --color-success-dark: #16A34A;
+
+  /* Error - Red for lost bets, errors */
+  --color-error: #EF4444;
+  --color-error-light: #F87171;
+  --color-error-dark: #DC2626;
+
+  /* Warning */
+  --color-warning: #F59E0B;
+
+  /* Background colors */
+  --color-bg: #111827;
+  --color-bg-card: #1F2937;
+  --color-bg-elevated: #374151;
+}
+
+/* Base styles */
+body {
+  @apply bg-bg text-white font-sans antialiased;
+}
+
+/* Ensure touch targets are accessible */
+button, a, input, select {
+  @apply min-h-11;
+}

@@ -32,6 +32,11 @@ export interface PredictionChoiceOdds {
     odds_basis_points: number;
 }
 
+export interface PredictionWithOdds {
+    prediction: Prediction;
+    odds: PredictionOdds;
+}
+
 export interface Bet {
     id: string;
     created_at: string;
