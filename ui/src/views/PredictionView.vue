@@ -173,7 +173,10 @@ async function placeBet() {
     toastType.value = 'success'
     toastMessage.value = `Bet placed! ${betAmount.value} tokens on your choice`
     showToast.value = true
+    // Skip transition on dismiss
+    swipeDismissed.value = true
     selectedChoice.value = null
+    setTimeout(() => { swipeDismissed.value = false }, 50)
     betAmount.value = Math.min(10, authStore.user?.tokens ?? 10)
     // Refresh prediction to get updated odds
     await predictionsStore.fetchPrediction(predictionId.value)
@@ -193,7 +196,10 @@ async function increaseBet() {
     toastType.value = 'success'
     toastMessage.value = `Bet increased by ${additionalTokens} tokens!`
     showToast.value = true
+    // Skip transition on dismiss
+    swipeDismissedIncrease.value = true
     showIncreaseBetUI.value = false
+    setTimeout(() => { swipeDismissedIncrease.value = false }, 50)
     // Refresh prediction to get updated odds
     await predictionsStore.fetchPrediction(predictionId.value)
   } catch (e) {
