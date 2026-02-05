@@ -29,11 +29,6 @@ function logout() {
     <!-- Admin Header -->
     <header class="bg-secondary px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <button @click="goToHome" class="text-white/80 hover:text-white">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
         <h1 class="text-lg font-bold text-white">Admin Panel</h1>
       </div>
       <div class="flex items-center gap-3">

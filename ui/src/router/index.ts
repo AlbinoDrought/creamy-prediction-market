@@ -14,25 +14,25 @@ const router = createRouter({
       path: '/home',
       name: 'home',
       component: () => import('@/views/HomeView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, playerOnly: true },
     },
     {
       path: '/predictions/:id',
       name: 'prediction',
       component: () => import('@/views/PredictionView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, playerOnly: true },
     },
     {
       path: '/leaderboard',
       name: 'leaderboard',
       component: () => import('@/views/LeaderboardView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, playerOnly: true },
     },
     {
       path: '/my-bets',
       name: 'my-bets',
       component: () => import('@/views/MyBetsView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, playerOnly: true },
     },
     {
       path: '/admin',
@@ -77,7 +77,8 @@ router.beforeEach(async (to, _from, next) => {
 
   // Guest-only routes (login page)
   if (to.meta.guest && isAuthenticated) {
-    return next({ name: 'home' })
+    // Redirect admins to admin dashboard, players to home
+    return next({ name: isAdmin ? 'admin-dashboard' : 'home' })
   }
 
   // Protected routes
@@ -85,9 +86,14 @@ router.beforeEach(async (to, _from, next) => {
     return next({ name: 'login' })
   }
 
-  // Admin routes
+  // Admin routes - only admins can access
   if (to.meta.requiresAdmin && !isAdmin) {
     return next({ name: 'home' })
+  }
+
+  // Player-only routes - admins cannot access
+  if (to.meta.playerOnly && isAdmin) {
+    return next({ name: 'admin-dashboard' })
   }
 
   next()
