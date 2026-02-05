@@ -29,6 +29,17 @@ export function useSSE() {
     eventSource.onopen = () => {
       connected.value = true
       console.log('[SSE] Connected')
+
+      if (reconnectTimeout) {
+        const predictionsStore = usePredictionsStore()
+        const betsStore = useBetsStore()
+        const authStore = useAuthStore()
+        const leaderboardStore = useLeaderboardStore()
+        predictionsStore.swapPredictions()
+        authStore.swapUser()
+        leaderboardStore.swapLeaderboard()
+        betsStore.swapBets()
+      }
     }
 
     eventSource.onmessage = (event) => {
