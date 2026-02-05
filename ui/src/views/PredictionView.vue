@@ -24,6 +24,66 @@ const toastMessage = ref('')
 const toastType = ref<'success' | 'error'>('success')
 const showToast = ref(false)
 
+// Swipe-to-dismiss state
+const touchStartY = ref(0)
+const touchCurrentY = ref(0)
+const isDragging = ref(false)
+const swipeDismissed = ref(false)
+const SWIPE_THRESHOLD = 80
+
+function onTouchStart(e: TouchEvent) {
+  touchStartY.value = e.touches[0].clientY
+  touchCurrentY.value = e.touches[0].clientY
+  isDragging.value = true
+}
+
+function onTouchMove(e: TouchEvent) {
+  if (!isDragging.value) return
+  touchCurrentY.value = e.touches[0].clientY
+}
+
+function onTouchEnd() {
+  if (!isDragging.value) return
+  const swipeDistance = touchCurrentY.value - touchStartY.value
+  if (swipeDistance > SWIPE_THRESHOLD) {
+    // Swiped down far enough - dismiss immediately (skip Vue transition)
+    swipeDismissed.value = true
+    selectedChoice.value = null
+    // Reset after a tick so next open works normally
+    setTimeout(() => {
+      swipeDismissed.value = false
+    }, 50)
+  }
+  isDragging.value = false
+  touchStartY.value = 0
+  touchCurrentY.value = 0
+}
+
+const swipeOffset = computed(() => {
+  if (!isDragging.value) return 0
+  const offset = touchCurrentY.value - touchStartY.value
+  // Only allow dragging down, with resistance
+  return offset > 0 ? Math.min(offset * 0.6, 150) : 0
+})
+
+// Auto-scroll selected choice into view
+function onChoiceSelect(choiceId: string) {
+  const isFirstSelection = !selectedChoice.value
+  selectedChoice.value = choiceId
+  // Only scroll when footer first opens, not when switching choices
+  if (isFirstSelection) {
+    setTimeout(() => {
+      const el = document.getElementById(`choice-${choiceId}`)
+      if (el) {
+        // Scroll so element is in upper third of visible area (above footer)
+        const rect = el.getBoundingClientRect()
+        const targetY = window.scrollY + rect.top - window.innerHeight / 3
+        window.scrollTo({ top: targetY, behavior: 'smooth' })
+      }
+    }, 100)
+  }
+}
+
 const predictionId = computed(() => route.params.id as string)
 
 onMounted(async () => {
@@ -122,7 +182,7 @@ function goBack() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-bg pb-20">
+  <div class="min-h-screen bg-bg" :class="canPlaceNewBet && selectedChoice ? 'pb-56' : 'pb-20'">
     <AppHeader />
 
     <main class="p-4">
@@ -246,41 +306,25 @@ function goBack() {
         </div>
 
         <!-- New bet section (only if no existing bet) -->
-        <div v-else-if="canPlaceNewBet" class="space-y-6">
+        <div v-else-if="canPlaceNewBet">
           <div>
             <h2 class="text-lg font-semibold text-white mb-3">Make Your Pick</h2>
             <div class="space-y-3">
               <ChoiceButton
                 v-for="choice in prediction.choices"
+                :id="`choice-${choice.id}`"
                 :key="choice.id"
                 :choice="choice"
                 :odds="getOddsForChoice(choice.id)"
                 :selected="selectedChoice === choice.id"
                 :disabled="false"
                 :show-odds="showOdds"
-                @select="selectedChoice = $event"
+                @select="onChoiceSelect($event)"
               />
             </div>
           </div>
-
-          <Transition name="fade">
-            <div v-if="selectedChoice" class="space-y-4">
-              <h2 class="text-lg font-semibold text-white">Bet Amount</h2>
-              <BetAmountInput
-                v-model="betAmount"
-                :max="authStore.user?.tokens ?? 0"
-              />
-
-              <button
-                @click="placeBet"
-                :disabled="betsStore.placingBet || !selectedChoice"
-                class="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-dark font-bold py-4 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
-              >
-                <LoadingSpinner v-if="betsStore.placingBet" size="sm" />
-                <span v-else>Place Bet ({{ betAmount }} tokens)</span>
-              </button>
-            </div>
-          </Transition>
+          <!-- Spacer to allow scrolling when footer is visible -->
+          <div v-if="selectedChoice" class="h-72"></div>
         </div>
 
         <!-- View only mode for closed/decided predictions (no existing bet) -->
@@ -307,6 +351,42 @@ function goBack() {
       </template>
     </main>
 
+    <!-- Sticky bet action footer for new bets -->
+    <Transition :name="swipeDismissed ? '' : 'slide-up'">
+      <div
+        v-if="canPlaceNewBet && selectedChoice"
+        class="fixed bottom-0 left-0 right-0 bg-dark-light border-t border-dark-lighter p-4 pb-24 z-10 touch-pan-x"
+        :class="{ 'transition-transform duration-200': !isDragging }"
+        :style="{ transform: `translateY(${swipeOffset}px)`, opacity: isDragging ? 1 - swipeOffset / 200 : 1 }"
+        @touchstart="onTouchStart"
+        @touchmove="onTouchMove"
+        @touchend="onTouchEnd"
+      >
+        <!-- Drag handle -->
+        <div class="flex justify-center mb-3 -mt-1">
+          <div class="w-10 h-1 bg-gray-600 rounded-full"></div>
+        </div>
+        <div class="max-w-md mx-auto space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-white">Bet Amount</h2>
+            <span class="text-xs text-gray-400">{{ authStore.user?.tokens ?? 0 }} available</span>
+          </div>
+          <BetAmountInput
+            v-model="betAmount"
+            :max="authStore.user?.tokens ?? 0"
+          />
+          <button
+            @click="placeBet"
+            :disabled="betsStore.placingBet || !selectedChoice"
+            class="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-dark font-bold py-4 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+          >
+            <LoadingSpinner v-if="betsStore.placingBet" size="sm" />
+            <span v-else>Place Bet ({{ betAmount }} tokens)</span>
+          </button>
+        </div>
+      </div>
+    </Transition>
+
     <BottomNav />
 
     <Toast
@@ -328,5 +408,16 @@ function goBack() {
 .fade-leave-to {
   opacity: 0;
   transform: translateY(10px);
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(100%);
 }
 </style>
