@@ -9,26 +9,36 @@ export const usePredictionsStore = defineStore('predictions', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  async function fetchPredictions() {
-    loading.value = true
+  async function swapPredictions() {
     error.value = null
     try {
       predictions.value = await api.getPredictions()
+      const cur = currentPrediction.value
+      if (cur) {
+        currentPrediction.value = predictions.value.find(p => p.prediction.id === cur.prediction.id) || null
+      }
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to load predictions'
+    }
+  }
+
+  async function fetchPredictions() {
+    loading.value = true
+    try {
+      await swapPredictions()
     } finally {
-      loading.value = false
+      loading.value = false;
     }
   }
 
   async function fetchPrediction(id: string) {
     loading.value = true
-    error.value = null
     try {
-      currentPrediction.value = await api.getPrediction(id)
-    } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Failed to load prediction'
-      currentPrediction.value = null
+      await swapPredictions()
+      currentPrediction.value = predictions.value.find(p => p.prediction.id === id) || null
+      if (!currentPrediction.value && !error.value) {
+        error.value = 'Failed to load prediction'
+      }
     } finally {
       loading.value = false
     }
@@ -43,6 +53,7 @@ export const usePredictionsStore = defineStore('predictions', () => {
     currentPrediction,
     loading,
     error,
+    swapPredictions,
     fetchPredictions,
     fetchPrediction,
     clearCurrent,

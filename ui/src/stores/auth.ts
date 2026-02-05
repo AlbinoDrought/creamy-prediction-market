@@ -90,12 +90,22 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function swapUser() {
+    if (!token.value) return false
+    try {
+      user.value = await api.getMe()
+      return true
+    } catch {
+      clearAuth()
+      return false
+    }
+  }
+
   async function fetchUser() {
     if (!token.value) return false
     loading.value = true
     try {
-      user.value = await api.getMe()
-      return true
+      return await swapUser()
     } catch {
       clearAuth()
       return false
@@ -125,6 +135,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     authenticate,
     logout,
+    swapUser,
     fetchUser,
     updateTokens,
   }

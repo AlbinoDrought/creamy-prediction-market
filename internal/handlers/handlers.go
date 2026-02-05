@@ -10,7 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	"go.albinodrought.com/creamy-prediction-market/internal/events"
 	"go.albinodrought.com/creamy-prediction-market/internal/repo"
 	"go.albinodrought.com/creamy-prediction-market/internal/types"
 	"golang.org/x/crypto/bcrypt"
@@ -20,6 +22,7 @@ type Handler struct {
 	Store          *repo.Store
 	Logger         *logrus.Logger
 	StartingTokens int64
+	EventHub       *events.Hub
 }
 
 func generateSessionToken() (string, error) {
@@ -353,6 +356,11 @@ func (h *Handler) PlaceBet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Emit events
+	h.EventHub.EmitPredictions()
+	h.EventHub.EmitLeaderboard()
+	h.EventHub.EmitBets(user.ID)
+
 	h.jsonResponse(w, http.StatusCreated, bet)
 }
 
@@ -412,6 +420,11 @@ func (h *Handler) IncreaseBetAmount(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		bet = bet2 // if err, bet amount is stale
 	}
+
+	// Emit events
+	h.EventHub.EmitPredictions()
+	h.EventHub.EmitLeaderboard()
+	h.EventHub.EmitBets(user.ID)
 
 	h.jsonResponse(w, http.StatusOK, bet)
 }
@@ -486,6 +499,8 @@ func (h *Handler) CreatePrediction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.EventHub.EmitPredictions()
+
 	h.jsonResponse(w, http.StatusCreated, prediction)
 }
 
@@ -546,6 +561,8 @@ func (h *Handler) UpdatePrediction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.EventHub.EmitPredictions()
+
 	h.jsonResponse(w, http.StatusOK, prediction)
 }
 
@@ -567,6 +584,8 @@ func (h *Handler) ClosePrediction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.EventHub.EmitPredictions()
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -583,6 +602,9 @@ func (h *Handler) VoidPrediction(w http.ResponseWriter, r *http.Request) {
 		h.errorResponse(w, http.StatusInternalServerError, "internal error")
 		return
 	}
+
+	h.EventHub.EmitPredictions()
+	h.EventHub.EmitLeaderboard()
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -619,6 +641,9 @@ func (h *Handler) DecidePrediction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.EventHub.EmitPredictions()
+	h.EventHub.EmitLeaderboard()
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -649,6 +674,8 @@ func (h *Handler) GiftTokens(w http.ResponseWriter, r *http.Request) {
 		h.errorResponse(w, http.StatusInternalServerError, "internal error")
 		return
 	}
+
+	h.EventHub.EmitLeaderboard()
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -692,8 +719,63 @@ func (h *Handler) ResetPIN(w http.ResponseWriter, r *http.Request) {
 	h.jsonResponse(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
+// SSE endpoint
+func (h *Handler) Events(w http.ResponseWriter, r *http.Request) {
+	// Set headers for SSE
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	// Get user ID if authenticated (for user-specific events)
+	// Try header first, then query param (EventSource doesn't support headers)
+	var userID string
+	if user, ok := h.getAuthenticatedUser(r); ok {
+		userID = user.ID
+	} else if token := r.URL.Query().Get("token"); token != "" {
+		if uid, ok := h.Store.GetUserIDBySession(token); ok {
+			userID = uid
+		}
+	}
+
+	// Create client
+	client := &events.Client{
+		ID:     uuid.New().String(),
+		UserID: userID,
+		Send:   make(chan []byte, 256),
+	}
+
+	h.EventHub.Register(client)
+	defer h.EventHub.Unregister(client)
+
+	// Send initial ping
+	w.Write([]byte(": ping\n\n"))
+	if f, ok := w.(http.Flusher); ok {
+		f.Flush()
+	}
+
+	// Listen for events or client disconnect
+	for {
+		select {
+		case message, ok := <-client.Send:
+			if !ok {
+				return
+			}
+			w.Write(message)
+			if f, ok := w.(http.Flusher); ok {
+				f.Flush()
+			}
+		case <-r.Context().Done():
+			return
+		}
+	}
+}
+
 // Register routes
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
+	// SSE
+	mux.HandleFunc("GET /api/events", h.Events)
+
 	// Public
 	mux.HandleFunc("GET /api/predictions", h.ListPredictions)
 	mux.HandleFunc("GET /api/predictions/{id}", h.GetPrediction)

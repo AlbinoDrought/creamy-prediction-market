@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"go.albinodrought.com/creamy-prediction-market/internal/events"
 	"go.albinodrought.com/creamy-prediction-market/internal/handlers"
 	"go.albinodrought.com/creamy-prediction-market/internal/repo"
 	"go.albinodrought.com/creamy-prediction-market/internal/types"
@@ -112,10 +113,15 @@ func main() {
 		}
 	}
 
+	// Create and start event hub for SSE
+	eventHub := events.NewHub()
+	go eventHub.Run()
+
 	h := &handlers.Handler{
 		Store:          store,
 		Logger:         logger,
 		StartingTokens: config.StartingTokens,
+		EventHub:       eventHub,
 	}
 
 	mux := http.NewServeMux()

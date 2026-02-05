@@ -16,13 +16,19 @@ export const useBetsStore = defineStore('bets', () => {
     )
   })
 
-  async function fetchBets() {
-    loading.value = true
+  async function swapBets() {
     error.value = null
     try {
       bets.value = await api.getMyBets()
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to load bets'
+    }
+  }
+
+  async function fetchBets() {
+    loading.value = true
+    try {
+      await swapBets()
     } finally {
       loading.value = false
     }
@@ -97,6 +103,7 @@ export const useBetsStore = defineStore('bets', () => {
     loading,
     error,
     placingBet,
+    swapBets,
     fetchBets,
     placeBet,
     increaseBet,
