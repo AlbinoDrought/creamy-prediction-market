@@ -1,7 +1,9 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
+	"io/fs"
 	"net/http"
 	"os"
 	"time"
@@ -13,6 +15,9 @@ import (
 	"go.albinodrought.com/creamy-prediction-market/internal/types"
 	"golang.org/x/crypto/bcrypt"
 )
+
+//go:embed ui/dist
+var ui embed.FS
 
 var logger = logrus.New()
 
@@ -127,10 +132,27 @@ func main() {
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux)
 
-	// Health check / root
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Creamy Prediction Market API"))
-	})
+	sub, err := fs.Sub(ui, "ui/dist")
+	if err != nil {
+		logger.WithError(err).Fatal("failed to move into ui/dist subfolder of embedded UI bundle")
+	}
+
+	for _, spaRoute := range []string{
+		"/home",
+		"/predictions/{id}",
+		"/leaderboard",
+		"/my-bets",
+		"/admin",
+		"/admin/predictions/new",
+		"/admin/predictions/{id}",
+		"/admin/users",
+	} {
+		mux.Handle("GET "+spaRoute, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFileFS(w, r, sub, "index.html")
+		}))
+	}
+
+	mux.Handle("GET /", http.FileServerFS(sub))
 
 	logger.Info("starting server on :3000")
 	if err := http.ListenAndServe(":3000", mux); err != nil {
