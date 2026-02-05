@@ -1,7 +1,9 @@
 package repo
 
 import (
+	"encoding/json"
 	"errors"
+	"io"
 	"sort"
 	"strings"
 	"sync"
@@ -21,6 +23,7 @@ func NewID() (string, error) {
 
 type Store struct {
 	lock        sync.RWMutex
+	dirty       bool
 	users       map[string]types.User
 	predictions map[string]types.Prediction
 	bets        map[string]types.Bet
@@ -36,6 +39,69 @@ func NewStore() *Store {
 		tokenLog:    make(map[string]types.TokenLog),
 		sessions:    make(map[string]string),
 	}
+}
+
+type storeCopy struct {
+	Users       map[string]types.User
+	Predictions map[string]types.Prediction
+	Bets        map[string]types.Bet
+	TokenLog    map[string]types.TokenLog
+	Sessions    map[string]string
+}
+
+func (s *Store) Save(w io.Writer) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.dirty = false
+
+	return json.NewEncoder(w).Encode(&storeCopy{
+		Users:       s.users,
+		Predictions: s.predictions,
+		Bets:        s.bets,
+		TokenLog:    s.tokenLog,
+		Sessions:    s.sessions,
+	})
+}
+
+func (s *Store) Load(r io.Reader) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	var copy storeCopy
+	if err := json.NewDecoder(r).Decode(&copy); err != nil {
+		return err
+	}
+	if copy.Users == nil {
+		copy.Users = make(map[string]types.User)
+	}
+	if copy.Predictions == nil {
+		copy.Predictions = make(map[string]types.Prediction)
+	}
+	if copy.Bets == nil {
+		copy.Bets = make(map[string]types.Bet)
+	}
+	if copy.TokenLog == nil {
+		copy.TokenLog = make(map[string]types.TokenLog)
+	}
+	if copy.Sessions == nil {
+		copy.Sessions = make(map[string]string)
+	}
+
+	s.dirty = false
+	s.users = copy.Users
+	s.predictions = copy.Predictions
+	s.bets = copy.Bets
+	s.tokenLog = copy.TokenLog
+	s.sessions = copy.Sessions
+
+	return nil
+}
+
+func (s *Store) IsDirty() bool {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	return s.dirty
 }
 
 var ErrUserNameTaken = errors.New("user name is taken")
@@ -61,6 +127,8 @@ func (s *Store) AddUser(u types.User, startingTokens int64) error {
 	if err != nil {
 		return err
 	}
+
+	s.dirty = true
 
 	s.users[u.ID] = u
 
@@ -90,6 +158,8 @@ func (s *Store) PutPrediction(p types.Prediction) error {
 		}
 	}
 
+	s.dirty = true
+
 	s.predictions[p.ID] = p
 
 	return nil
@@ -107,6 +177,8 @@ func (s *Store) applyTokenLogLocked(tc types.TokenLog) error {
 	if newTokenValue < 0 {
 		return ErrTokensWouldBeNegative
 	}
+
+	s.dirty = true
 
 	user.Tokens = newTokenValue
 	s.users[tc.UserID] = user
@@ -130,6 +202,8 @@ func (s *Store) GiftTokens(userID string, amount int64) error {
 	if err != nil {
 		return err
 	}
+
+	s.dirty = true
 
 	err = s.applyTokenLogLocked(types.TokenLog{
 		ID:        logID,
@@ -193,6 +267,8 @@ func (s *Store) UpdateUserPIN(id string, hash []byte) error {
 		return ErrUserNotFound
 	}
 
+	s.dirty = true
+
 	user.PINHash = hash
 	s.users[user.ID] = user
 
@@ -204,6 +280,8 @@ func (s *Store) UpdateUserPIN(id string, hash []byte) error {
 func (s *Store) CreateSession(token, userID string) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
+
+	s.dirty = true
 	s.sessions[token] = userID
 }
 
@@ -331,6 +409,8 @@ func (s *Store) DecidePrediction(id, choice string) error {
 		winningOdds = 100
 	}
 
+	s.dirty = true
+
 	tcs := []types.TokenLog{}
 
 	for i := range bets {
@@ -428,6 +508,8 @@ func (s *Store) VoidPrediction(id string) error {
 		}
 	}
 
+	s.dirty = true
+
 	for i := range reverseLogs {
 		if err := s.applyTokenLogLocked(reverseLogs[i]); err != nil {
 			return err // this would be a really bad error to have
@@ -457,6 +539,8 @@ func (s *Store) ClosePrediction(id string) error {
 	if p.Status != types.PredictionStatusOpen {
 		return ErrPredictionNotOpen
 	}
+
+	s.dirty = true
 
 	p.Status = types.PredictionStatusClosed
 	s.predictions[id] = p
@@ -506,6 +590,8 @@ func (s *Store) CreateBet(bet types.Bet) error {
 	if err != nil {
 		return err
 	}
+
+	s.dirty = true
 
 	err = s.applyTokenLogLocked(types.TokenLog{
 		ID:           logID,
@@ -577,6 +663,8 @@ func (s *Store) IncreaseBet(betID string, to int64) error {
 	if err != nil {
 		return err
 	}
+
+	s.dirty = true
 
 	err = s.applyTokenLogLocked(types.TokenLog{
 		ID:           logID,

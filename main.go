@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
 	"io/fs"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -25,11 +28,18 @@ type Config struct {
 	Debug    bool   `json:"debug"`
 	AdminPIN string `json:"admin_pin"`
 
+	RepoPath string `json:"repo_path"`
+
 	StartingTokens int64 `json:"starting_tokens"`
 }
 
 func main() {
 	logger.SetFormatter(&logrus.JSONFormatter{})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	gracefulCtx, gracefulCancel := context.WithCancel(ctx)
 
 	var (
 		configBytes []byte
@@ -58,69 +68,117 @@ func main() {
 
 	store := repo.NewStore()
 
-	// Create admin user
-	adminID, err := repo.NewID()
-	if err != nil {
-		logger.WithError(err).Fatal("failed to generate admin ID")
-	}
-
-	adminPin := config.AdminPIN
-	if adminPin == "" {
-		adminPin = "0000"
-	}
-
-	pinHash, err := bcrypt.GenerateFromPassword([]byte(adminPin), bcrypt.MinCost)
-	if err != nil {
-		logger.WithError(err).Fatal("failed to generate admin bcrypt hash")
-	}
-
-	err = store.AddUser(types.User{
-		ID:      adminID,
-		Name:    "Admin",
-		PINHash: pinHash,
-		Admin:   true,
-		Tokens:  0,
-	}, 0)
-	if err != nil {
-		logger.WithError(err).Fatal("failed to add admin user")
-	}
-	logger.Info("added admin user")
-
-	// Create sample prediction for testing
-	if config.Debug {
-		predictionID, err := repo.NewID()
-		if err != nil {
-			logger.WithError(err).Warn("failed to generate prediction ID, skipping")
-		} else {
-			choiceID1, _ := repo.NewID()
-			choiceID2, _ := repo.NewID()
-			choiceID3, _ := repo.NewID()
-
-			err = store.PutPrediction(types.Prediction{
-				ID:          predictionID,
-				CreatedAt:   time.Now().Format(time.RFC3339),
-				Name:        "What color will the balloon be?",
-				Description: "The balloon will be released at noon",
-				Status:      types.PredictionStatusOpen,
-				ClosesAt:    time.Now().AddDate(0, 0, 1).Truncate(time.Hour).Add(11 * time.Hour).Format(time.RFC3339),
-				Choices: []types.PredictionChoice{
-					{ID: choiceID1, Name: "Red"},
-					{ID: choiceID2, Name: "Green"},
-					{ID: choiceID3, Name: "Blue"},
-				},
-				OddsVisibleBeforeBet: true,
-			})
-			if err != nil {
-				logger.WithError(err).Warn("failed to add sample prediction")
-			} else {
-				logger.Info("added sample prediction")
+	(func() {
+		if config.RepoPath != "" {
+			handle, err := os.Open(config.RepoPath)
+			if err == nil {
+				defer handle.Close()
+				err = store.Load(handle)
+				if err != nil {
+					logger.WithError(err).Fatal("failed to load repo from path")
+				}
+				logger.Info("loaded repo")
+				return
 			}
+
+			if !os.IsNotExist(err) {
+				logger.WithError(err).Fatal("unhandled error while opening repo path")
+			}
+
+			// file doesn't exist, proceed with default data creation
 		}
-	}
+
+		adminID, err := repo.NewID()
+		if err != nil {
+			logger.WithError(err).Fatal("failed to generate admin ID")
+		}
+
+		adminPin := config.AdminPIN
+		if adminPin == "" {
+			adminPin = "0000"
+		}
+
+		pinHash, err := bcrypt.GenerateFromPassword([]byte(adminPin), bcrypt.MinCost)
+		if err != nil {
+			logger.WithError(err).Fatal("failed to generate admin bcrypt hash")
+		}
+
+		err = store.AddUser(types.User{
+			ID:      adminID,
+			Name:    "Admin",
+			PINHash: pinHash,
+			Admin:   true,
+			Tokens:  0,
+		}, 0)
+		if err != nil {
+			logger.WithError(err).Fatal("failed to add admin user")
+		}
+		logger.Info("added admin user")
+	})()
 
 	// Create and start event hub for SSE
 	eventHub := events.NewHub()
 	go eventHub.Run()
+
+	// save repo data every minute if dirty
+	save := func() {
+		if !store.IsDirty() {
+			return
+		}
+
+		newPath := config.RepoPath + ".new"
+		oldPath := config.RepoPath + ".old"
+
+		handle, err := os.Create(newPath)
+		if err != nil {
+			logger.WithError(err).Warn("failed to create persistence path!")
+			return
+		}
+		defer handle.Close()
+
+		err1 := store.Save(handle)
+		if err1 != nil {
+			logger.WithError(err1).Warn("failed to save store to handle")
+		}
+		err2 := handle.Close()
+		if err2 != nil {
+			logger.WithError(err2).Warn("failed to close handle")
+		}
+		if err1 != nil || err2 != nil {
+			return
+		}
+
+		err = os.Rename(config.RepoPath, oldPath)
+		if err != nil && !os.IsNotExist(err) {
+			logger.WithError(err).Warn("failed to backup repo data to .old, ignoring")
+		}
+		err = os.Rename(newPath, config.RepoPath)
+		if err != nil {
+			logger.WithError(err).Warn("failed to move .new repo data to path!")
+		} else {
+			logger.Info("saved state")
+		}
+	}
+	go func() {
+		if config.RepoPath == "" {
+			logger.Warn("running without persistence, please configure repo_path!")
+			return
+		}
+
+		ticker := time.NewTicker(time.Minute)
+		for {
+			<-ticker.C
+			save()
+		}
+	}()
+
+	go func() {
+		c := make(chan os.Signal, 2)
+		signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
+		<-c
+		logger.Info("received signal, performing graceful exit")
+		gracefulCancel()
+	}()
 
 	h := &handlers.Handler{
 		Store:          store,
@@ -154,9 +212,32 @@ func main() {
 
 	mux.Handle("GET /", http.FileServerFS(sub))
 
-	logger.Info("starting server on :3000")
-	if err := http.ListenAndServe(":3000", mux); err != nil {
-		logger.WithError(err).Error("http.ListenAndServe error")
+	server := http.Server{
+		Addr:    ":3000",
+		Handler: mux,
 	}
-	logger.Info("end of main")
+	serverCtx, serverCancel := context.WithCancel(ctx)
+	go func() {
+		defer serverCancel()
+		logger.Info("starting server on :3000")
+		if err := server.ListenAndServe(); err != nil {
+			logger.WithError(err).Error("http.ListenAndServe error")
+		}
+	}()
+
+	select {
+	case <-serverCtx.Done():
+		logger.Info("received forceful shutdown")
+	case <-gracefulCtx.Done():
+		logger.Info("received graceful shutdown")
+	}
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(ctx, 5*time.Second)
+	defer shutdownCancel()
+
+	server.Shutdown(shutdownCtx)
+
+	save()
+
+	logger.Info("goodnight")
 }
