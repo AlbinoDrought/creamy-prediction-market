@@ -643,6 +643,7 @@ func (h *Handler) DecidePrediction(w http.ResponseWriter, r *http.Request) {
 
 	h.EventHub.EmitPredictions()
 	h.EventHub.EmitLeaderboard()
+	h.EventHub.EmitBetsAll()
 
 	w.WriteHeader(http.StatusNoContent)
 }

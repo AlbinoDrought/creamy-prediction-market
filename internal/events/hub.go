@@ -113,3 +113,7 @@ func (h *Hub) EmitLeaderboard() {
 func (h *Hub) EmitBets(userID string) {
 	h.Emit(Event{Type: EventBets, UserID: userID})
 }
+
+func (h *Hub) EmitBetsAll() {
+	h.Emit(Event{Type: EventBets})
+}

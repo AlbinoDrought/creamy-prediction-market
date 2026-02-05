@@ -3,12 +3,17 @@ import { ref, computed } from 'vue'
 import type { Bet } from '@/types/predictions'
 import { api } from '@/api/client'
 import { useAuthStore } from './auth'
+import { useConfetti } from '@/composables/useConfetti'
 
 export const useBetsStore = defineStore('bets', () => {
   const bets = ref<Bet[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
   const placingBet = ref(false)
+  const newlyWonBets = ref<Bet[]>([])
+  const hasInitialized = ref(false)
+
+  const { fire: fireConfetti } = useConfetti()
 
   const sortedBets = computed(() => {
     return [...bets.value].sort(
@@ -19,10 +24,32 @@ export const useBetsStore = defineStore('bets', () => {
   async function swapBets() {
     error.value = null
     try {
-      bets.value = await api.getMyBets()
+      // Track previous bet statuses to detect new wins
+      const previousStatuses = new Map(bets.value.map(b => [b.id, b.status]))
+
+      const newBets = await api.getMyBets()
+
+      // Only check for wins after initial load (not on page open)
+      if (hasInitialized.value) {
+        const newWins = newBets.filter(bet =>
+          bet.status === 'won' && previousStatuses.get(bet.id) !== 'won'
+        )
+
+        if (newWins.length > 0) {
+          newlyWonBets.value = newWins
+          fireConfetti(150)
+        }
+      }
+
+      bets.value = newBets
+      hasInitialized.value = true
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to load bets'
     }
+  }
+
+  function clearNewlyWonBets() {
+    newlyWonBets.value = []
   }
 
   async function fetchBets() {
@@ -103,11 +130,13 @@ export const useBetsStore = defineStore('bets', () => {
     loading,
     error,
     placingBet,
+    newlyWonBets,
     swapBets,
     fetchBets,
     placeBet,
     increaseBet,
     getBetsForPrediction,
     getBetForPrediction,
+    clearNewlyWonBets,
   }
 })
