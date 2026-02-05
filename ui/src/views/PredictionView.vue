@@ -19,16 +19,18 @@ const betsStore = useBetsStore()
 const authStore = useAuthStore()
 
 const selectedChoice = ref<string | null>(null)
+const showIncreaseBetUI = ref(false)
 const betAmount = ref(10)
 const toastMessage = ref('')
 const toastType = ref<'success' | 'error'>('success')
 const showToast = ref(false)
 
-// Swipe-to-dismiss state
+// Swipe-to-dismiss state (shared for both footers)
 const touchStartY = ref(0)
 const touchCurrentY = ref(0)
 const isDragging = ref(false)
 const swipeDismissed = ref(false)
+const swipeDismissedIncrease = ref(false)
 const SWIPE_THRESHOLD = 80
 
 function onTouchStart(e: TouchEvent) {
@@ -49,9 +51,23 @@ function onTouchEnd() {
     // Swiped down far enough - dismiss immediately (skip Vue transition)
     swipeDismissed.value = true
     selectedChoice.value = null
-    // Reset after a tick so next open works normally
     setTimeout(() => {
       swipeDismissed.value = false
+    }, 50)
+  }
+  isDragging.value = false
+  touchStartY.value = 0
+  touchCurrentY.value = 0
+}
+
+function onTouchEndIncrease() {
+  if (!isDragging.value) return
+  const swipeDistance = touchCurrentY.value - touchStartY.value
+  if (swipeDistance > SWIPE_THRESHOLD) {
+    swipeDismissedIncrease.value = true
+    showIncreaseBetUI.value = false
+    setTimeout(() => {
+      swipeDismissedIncrease.value = false
     }, 50)
   }
   isDragging.value = false
@@ -159,6 +175,7 @@ async function increaseBet() {
     toastType.value = 'success'
     toastMessage.value = `Bet increased by ${additionalTokens} tokens!`
     showToast.value = true
+    showIncreaseBetUI.value = false
     // Refresh prediction to get updated odds
     await predictionsStore.fetchPrediction(predictionId.value)
   } catch (e) {
@@ -182,7 +199,7 @@ function goBack() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-bg" :class="canPlaceNewBet && selectedChoice ? 'pb-56' : 'pb-20'">
+  <div class="min-h-screen bg-bg" :class="(canPlaceNewBet && selectedChoice) || (canIncreaseBet && showIncreaseBetUI) ? 'pb-72' : 'pb-20'">
     <AppHeader />
 
     <main class="p-4">
@@ -249,6 +266,12 @@ function goBack() {
             </div>
             <div class="text-gray-400">
               <span class="text-white font-medium">{{ existingBet.amount }}</span> tokens wagered
+              <template v-if="existingBet.status === 'placed' && getOddsForChoice(existingBet.prediction_choice_id)">
+                <span class="mx-2">→</span>
+                <span class="text-success font-medium">
+                  {{ Math.floor((existingBet.amount * getOddsForChoice(existingBet.prediction_choice_id)!.odds_basis_points) / 100) }}
+                </span> if correct
+              </template>
             </div>
           </div>
 
@@ -278,24 +301,13 @@ function goBack() {
             </div>
           </div>
 
-          <!-- Increase bet section -->
-          <div v-if="canIncreaseBet" class="mt-6 space-y-4">
-            <h3 class="text-lg font-semibold text-white">Increase Your Bet</h3>
-            <BetAmountInput
-              v-model="betAmount"
-              :min="existingBet.amount + 1"
-              :max="existingBet.amount + (authStore.user?.tokens ?? 0)"
-            />
-            <p class="text-sm text-gray-400 text-center">
-              Adding <span class="text-primary font-medium">{{ betAmount - existingBet.amount }}</span> more tokens
-            </p>
+          <!-- Increase bet trigger button -->
+          <div v-if="canIncreaseBet" class="mt-4">
             <button
-              @click="increaseBet"
-              :disabled="betsStore.placingBet || betAmount <= existingBet.amount"
-              class="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-dark font-bold py-4 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+              @click="showIncreaseBetUI = true"
+              class="w-full bg-dark-lighter hover:bg-dark-light border border-dark-lighter text-white font-medium py-3 px-4 rounded-xl transition-colors"
             >
-              <LoadingSpinner v-if="betsStore.placingBet" size="sm" />
-              <span v-else>Increase Bet to {{ betAmount }} tokens</span>
+              Increase Bet
             </button>
           </div>
 
@@ -382,6 +394,46 @@ function goBack() {
           >
             <LoadingSpinner v-if="betsStore.placingBet" size="sm" />
             <span v-else>Place Bet ({{ betAmount }} tokens)</span>
+          </button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Sticky footer for increasing bet -->
+    <Transition :name="swipeDismissedIncrease ? '' : 'slide-up'">
+      <div
+        v-if="canIncreaseBet && showIncreaseBetUI"
+        class="fixed bottom-0 left-0 right-0 bg-dark-light border-t border-dark-lighter p-4 pb-24 z-10 touch-pan-x"
+        :class="{ 'transition-transform duration-200': !isDragging }"
+        :style="{ transform: `translateY(${swipeOffset}px)`, opacity: isDragging ? 1 - swipeOffset / 200 : 1 }"
+        @touchstart="onTouchStart"
+        @touchmove="onTouchMove"
+        @touchend="onTouchEndIncrease"
+      >
+        <!-- Drag handle -->
+        <div class="flex justify-center mb-3 -mt-1">
+          <div class="w-10 h-1 bg-gray-600 rounded-full"></div>
+        </div>
+        <div class="max-w-md mx-auto space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-white">Increase Your Bet</h2>
+            <span class="text-xs text-gray-400">{{ authStore.user?.tokens ?? 0 }} available</span>
+          </div>
+          <BetAmountInput
+            v-model="betAmount"
+            :min="existingBet!.amount + 1"
+            :max="existingBet!.amount + (authStore.user?.tokens ?? 0)"
+          />
+          <p class="text-sm text-gray-400 text-center">
+            Adding <span class="text-primary font-medium">{{ betAmount - existingBet!.amount }}</span> more tokens
+          </p>
+          <button
+            @click="increaseBet"
+            :disabled="betsStore.placingBet || betAmount <= existingBet!.amount"
+            class="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-dark font-bold py-4 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+          >
+            <LoadingSpinner v-if="betsStore.placingBet" size="sm" />
+            <span v-else>Increase Bet to {{ betAmount }} tokens</span>
           </button>
         </div>
       </div>
