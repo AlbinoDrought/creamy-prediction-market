@@ -84,6 +84,11 @@ func (p Prediction) Odds(bets []Bet) PredictionOdds {
 	}
 }
 
+type PredictionWithOdds struct {
+	Prediction Prediction     `json:"prediction"`
+	Odds       PredictionOdds `json:"odds"`
+}
+
 type BetStatus string
 
 const (

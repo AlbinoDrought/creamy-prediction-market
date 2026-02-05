@@ -4,14 +4,20 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/sirupsen/logrus"
+	"go.albinodrought.com/creamy-prediction-market/internal/handlers"
+	"go.albinodrought.com/creamy-prediction-market/internal/repo"
+	"go.albinodrought.com/creamy-prediction-market/internal/types"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var logger = logrus.New()
 
 type Config struct {
-	Debug bool `json:"debug"`
+	Debug    bool   `json:"debug"`
+	AdminPIN string `json:"admin_pin"`
 
 	StartingTokens int64 `json:"starting_tokens"`
 }
@@ -44,11 +50,83 @@ func main() {
 		logger.SetLevel(logrus.DebugLevel)
 	}
 
+	store := repo.NewStore()
+
+	// Create admin user
+	adminID, err := repo.NewID()
+	if err != nil {
+		logger.WithError(err).Fatal("failed to generate admin ID")
+	}
+
+	adminPin := config.AdminPIN
+	if adminPin == "" {
+		adminPin = "0000"
+	}
+
+	pinHash, err := bcrypt.GenerateFromPassword([]byte(adminPin), bcrypt.MinCost)
+	if err != nil {
+		logger.WithError(err).Fatal("failed to generate admin bcrypt hash")
+	}
+
+	err = store.AddUser(types.User{
+		ID:      adminID,
+		Name:    "Admin",
+		PINHash: pinHash,
+		Admin:   true,
+		Tokens:  0,
+	}, 0)
+	if err != nil {
+		logger.WithError(err).Fatal("failed to add admin user")
+	}
+	logger.Info("added admin user")
+
+	// Create sample prediction for testing
+	if config.Debug {
+		predictionID, err := repo.NewID()
+		if err != nil {
+			logger.WithError(err).Warn("failed to generate prediction ID, skipping")
+		} else {
+			choiceID1, _ := repo.NewID()
+			choiceID2, _ := repo.NewID()
+			choiceID3, _ := repo.NewID()
+
+			err = store.PutPrediction(types.Prediction{
+				ID:          predictionID,
+				CreatedAt:   time.Now().Format(time.RFC3339),
+				Name:        "What color will the balloon be?",
+				Description: "The balloon will be released at noon",
+				Status:      types.PredictionStatusOpen,
+				ClosesAt:    time.Now().AddDate(0, 0, 1).Truncate(time.Hour).Add(11 * time.Hour).Format(time.RFC3339),
+				Choices: []types.PredictionChoice{
+					{ID: choiceID1, Name: "Red"},
+					{ID: choiceID2, Name: "Green"},
+					{ID: choiceID3, Name: "Blue"},
+				},
+				OddsVisibleBeforeBet: true,
+			})
+			if err != nil {
+				logger.WithError(err).Warn("failed to add sample prediction")
+			} else {
+				logger.Info("added sample prediction")
+			}
+		}
+	}
+
+	h := &handlers.Handler{
+		Store:          store,
+		Logger:         logger,
+		StartingTokens: config.StartingTokens,
+	}
+
 	mux := http.NewServeMux()
+	h.RegisterRoutes(mux)
+
+	// Health check / root
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello World"))
+		w.Write([]byte("Creamy Prediction Market API"))
 	})
 
+	logger.Info("starting server on :3000")
 	if err := http.ListenAndServe(":3000", mux); err != nil {
 		logger.WithError(err).Error("http.ListenAndServe error")
 	}
