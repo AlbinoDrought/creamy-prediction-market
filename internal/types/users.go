@@ -5,7 +5,7 @@ type User struct {
 	Name string `json:"name"`
 	// PINHash is a bcrypt hash of the user's pin.
 	// This isn't meant to be secure at all really - we expect the pin to simply be four digits, like 0000.
-	PINHash []byte `json:"-"`
+	PINHash []byte `json:"pin_hash,omitempty"`
 	Admin   bool   `json:"admin"`
 
 	Tokens int64 `json:"tokens"`

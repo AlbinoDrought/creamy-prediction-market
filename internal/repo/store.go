@@ -253,6 +253,7 @@ func (s *Store) ListUsers() []types.User {
 
 	users := make([]types.User, 0, len(s.users))
 	for _, user := range s.users {
+		user.PINHash = nil
 		users = append(users, user)
 	}
 	return users
