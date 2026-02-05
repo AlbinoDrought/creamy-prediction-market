@@ -86,6 +86,11 @@ const swipeOffset = computed(() => {
 function onChoiceSelect(choiceId: string) {
   const isFirstSelection = !selectedChoice.value
   selectedChoice.value = choiceId
+  // Cap bet amount to available tokens
+  const maxTokens = authStore.user?.tokens ?? 0
+  if (betAmount.value > maxTokens) {
+    betAmount.value = Math.max(1, maxTokens)
+  }
   // Only scroll when footer first opens, not when switching choices
   if (isFirstSelection) {
     setTimeout(() => {
@@ -98,6 +103,19 @@ function onChoiceSelect(choiceId: string) {
       }
     }, 100)
   }
+}
+
+function openIncreaseBetUI() {
+  // Cap bet amount to max allowed for increase
+  const maxTokens = (existingBet.value?.amount ?? 0) + (authStore.user?.tokens ?? 0)
+  const minTokens = (existingBet.value?.amount ?? 0) + 1
+  if (betAmount.value > maxTokens) {
+    betAmount.value = maxTokens
+  }
+  if (betAmount.value < minTokens) {
+    betAmount.value = minTokens
+  }
+  showIncreaseBetUI.value = true
 }
 
 const predictionId = computed(() => route.params.id as string)
@@ -304,7 +322,7 @@ function goBack() {
           <!-- Increase bet trigger button -->
           <div v-if="canIncreaseBet" class="mt-4">
             <button
-              @click="showIncreaseBetUI = true"
+              @click="openIncreaseBetUI"
               class="w-full bg-dark-lighter hover:bg-dark-light border border-dark-lighter text-white font-medium py-3 px-4 rounded-xl transition-colors"
             >
               Increase Bet
