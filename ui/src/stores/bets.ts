@@ -37,7 +37,15 @@ export const useBetsStore = defineStore('bets', () => {
 
         if (newWins.length > 0) {
           newlyWonBets.value = newWins
-          fireConfetti(150)
+          // Scale particles based on win amount (10 tokens = 30 particles, 300+ = 200 particles)
+          const totalWon = newWins.reduce((sum, bet) => sum + (bet.won_amount ?? 0), 0)
+          const minParticles = 30
+          const maxParticles = 200
+          const minWin = 10
+          const maxWin = 300
+          const scaled = minParticles + ((totalWon - minWin) / (maxWin - minWin)) * (maxParticles - minParticles)
+          const particleCount = Math.round(Math.max(minParticles, Math.min(maxParticles, scaled)))
+          fireConfetti(particleCount)
         }
       }
 
