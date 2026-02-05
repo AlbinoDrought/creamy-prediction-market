@@ -7,6 +7,13 @@ interface ApiError {
   error: string
 }
 
+export class ApiRequestError extends Error {
+  constructor(message: string, public status: number) {
+    super(message)
+    this.name = 'ApiRequestError'
+  }
+}
+
 class ApiClient {
   private token: string | null = null
 
@@ -35,7 +42,7 @@ class ApiClient {
 
     if (!response.ok) {
       const error: ApiError = await response.json().catch(() => ({ error: 'Request failed' }))
-      throw new Error(error.error || `HTTP ${response.status}`)
+      throw new ApiRequestError(error.error || `HTTP ${response.status}`, response.status)
     }
 
     if (response.status === 204) {

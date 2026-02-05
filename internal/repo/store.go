@@ -3,6 +3,7 @@ package repo
 import (
 	"errors"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -48,8 +49,10 @@ func (s *Store) AddUser(u types.User, startingTokens int64) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
+	lcase := strings.ToLower(u.Name)
+
 	for id := range s.users {
-		if u.Name == s.users[id].Name {
+		if lcase == strings.ToLower(s.users[id].Name) {
 			return ErrUserNameTaken
 		}
 	}
@@ -161,8 +164,9 @@ func (s *Store) GetUserByName(name string) (types.User, error) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
+	lcase := strings.ToLower(name)
 	for _, user := range s.users {
-		if user.Name == name {
+		if lcase == strings.ToLower(user.Name) {
 			return user, nil
 		}
 	}

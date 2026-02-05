@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '@/types/users'
-import { api } from '@/api/client'
+import { api, ApiRequestError } from '@/api/client'
 
 const STORAGE_KEY = 'auth_token'
 
@@ -63,6 +63,33 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function authenticate(name: string, pin: string) {
+    loading.value = true
+    error.value = null
+    try {
+      // Try to register first
+      const result = await api.register(name, pin)
+      setAuth(result.token, result.user)
+      return true
+    } catch (e) {
+      // If 409 (conflict), name already exists - try to login
+      if (e instanceof ApiRequestError && e.status === 409) {
+        try {
+          const result = await api.login(name, pin)
+          setAuth(result.token, result.user)
+          return true
+        } catch (loginError) {
+          error.value = loginError instanceof Error ? loginError.message : 'Login failed'
+          return false
+        }
+      }
+      error.value = e instanceof Error ? e.message : 'Authentication failed'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function fetchUser() {
     if (!token.value) return false
     loading.value = true
@@ -96,6 +123,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAdmin,
     register,
     login,
+    authenticate,
     logout,
     fetchUser,
     updateTokens,

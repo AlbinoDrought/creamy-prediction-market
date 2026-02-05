@@ -7,19 +7,15 @@ import LoadingSpinner from '@/components/LoadingSpinner.vue'
 const authStore = useAuthStore()
 const router = useRouter()
 
-const isLogin = ref(true)
 const name = ref('')
 const pin = ref('')
 
 async function handleSubmit() {
   if (!name.value.trim() || !pin.value.trim()) return
 
-  const success = isLogin.value
-    ? await authStore.login(name.value.trim(), pin.value)
-    : await authStore.register(name.value.trim(), pin.value)
-
+  const success = await authStore.authenticate(name.value.trim(), pin.value)
   if (success) {
-    router.push({ name: 'home' })
+    router.push({ name: authStore.isAdmin ? 'admin-dashboard' : 'home' })
   }
 }
 </script>
@@ -38,29 +34,11 @@ async function handleSubmit() {
         <p class="text-gray-400 mt-2">Bet on the game with your friends</p>
       </div>
 
-      <!-- Toggle -->
-      <div class="flex bg-dark rounded-lg p-1 mb-6">
-        <button
-          @click="isLogin = true"
-          class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors"
-          :class="isLogin ? 'bg-primary text-dark' : 'text-gray-400 hover:text-white'"
-        >
-          Sign In
-        </button>
-        <button
-          @click="isLogin = false"
-          class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors"
-          :class="!isLogin ? 'bg-primary text-dark' : 'text-gray-400 hover:text-white'"
-        >
-          Register
-        </button>
-      </div>
-
       <!-- Form -->
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div>
           <label for="name" class="block text-sm font-medium text-gray-300 mb-2">
-            Username
+            Name
           </label>
           <input
             id="name"
@@ -100,7 +78,7 @@ async function handleSubmit() {
           class="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-dark font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
         >
           <LoadingSpinner v-if="authStore.loading" size="sm" />
-          <span v-else>{{ isLogin ? 'Sign In' : 'Create Account' }}</span>
+          <span v-else>Continue</span>
         </button>
       </form>
     </div>
