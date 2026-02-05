@@ -20,7 +20,10 @@ Create a config like this:
 
 ```json
 {
-  "todo": "todo"
+  "debug": false,
+  "admin_pin": "1234",
+  "repo_path": "/path/to/dbfile.json",
+  "starting_tokens": 1000
 }
 ```
 
