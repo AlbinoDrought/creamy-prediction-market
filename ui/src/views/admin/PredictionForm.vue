@@ -142,7 +142,7 @@ function goBack() {
           type="text"
           required
           class="w-full bg-dark border border-dark-lighter rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-secondary"
-          placeholder="e.g., Who will win the Superbowl?"
+          placeholder="e.g., Who will win the game?"
         />
       </div>
 

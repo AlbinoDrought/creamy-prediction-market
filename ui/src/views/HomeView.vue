@@ -59,7 +59,7 @@ const sections = [
             </svg>
           </div>
           <p class="text-gray-400">No predictions yet</p>
-          <p class="text-gray-500 text-sm mt-1">Check back soon for Superbowl bets!</p>
+          <p class="text-gray-500 text-sm mt-1">Check back soon for bets!</p>
         </div>
       </template>
     </main>
