@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
 
 const authStore = useAuthStore()
+const router = useRouter()
+
+function goToLeaderboard() {
+  router.push({ name: 'leaderboard' })
+}
 </script>
 
 <template>
@@ -15,9 +21,12 @@ const authStore = useAuthStore()
         <p class="text-sm text-gray-400">Player</p>
       </div>
     </div>
-    <div class="bg-dark-light px-4 py-2 rounded-full flex items-center gap-2">
+    <button
+      @click="goToLeaderboard"
+      class="bg-dark-light hover:bg-dark-lighter px-4 py-2 rounded-full flex items-center gap-2 transition-colors"
+    >
       <span class="text-primary font-bold">{{ authStore.user?.tokens ?? 0 }}</span>
       <span class="text-gray-400 text-sm">tokens</span>
-    </div>
+    </button>
   </header>
 </template>
