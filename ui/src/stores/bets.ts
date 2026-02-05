@@ -50,8 +50,45 @@ export const useBetsStore = defineStore('bets', () => {
     }
   }
 
+  async function increaseBet(betId: string, newAmount: number) {
+    placingBet.value = true
+    error.value = null
+    try {
+      const existingBet = bets.value.find(b => b.id === betId)
+      if (!existingBet) throw new Error('Bet not found')
+
+      const additionalTokens = newAmount - existingBet.amount
+      if (additionalTokens <= 0) throw new Error('New amount must be greater than current amount')
+
+      const updatedBet = await api.updateBetAmount(betId, newAmount)
+
+      // Update the bet in our local state
+      const index = bets.value.findIndex(b => b.id === betId)
+      if (index !== -1) {
+        bets.value[index] = updatedBet
+      }
+
+      // Update user's token balance (only deduct the additional amount)
+      const authStore = useAuthStore()
+      if (authStore.user) {
+        authStore.updateTokens(authStore.user.tokens - additionalTokens)
+      }
+
+      return updatedBet
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Failed to increase bet'
+      throw e
+    } finally {
+      placingBet.value = false
+    }
+  }
+
   function getBetsForPrediction(predictionId: string) {
     return bets.value.filter(bet => bet.prediction_id === predictionId)
+  }
+
+  function getBetForPrediction(predictionId: string) {
+    return bets.value.find(bet => bet.prediction_id === predictionId)
   }
 
   return {
@@ -62,6 +99,8 @@ export const useBetsStore = defineStore('bets', () => {
     placingBet,
     fetchBets,
     placeBet,
+    increaseBet,
     getBetsForPrediction,
+    getBetForPrediction,
   }
 })

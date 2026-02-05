@@ -20,7 +20,7 @@ function updateValue(value: number) {
 
 const quickAmounts = computed(() => {
   const amounts = [10, 25, 50, 100]
-  return amounts.filter(a => a <= props.max)
+  return amounts.filter(a => a >= minValue.value && a <= props.max)
 })
 </script>
 

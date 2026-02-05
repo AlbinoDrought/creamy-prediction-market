@@ -37,6 +37,7 @@ const statusConfig = computed(() => {
 
 const timeRemaining = computed(() => {
   if (props.prediction.status !== PredictionStatus.Open) return null
+  if (!props.prediction.closes_at) return null
 
   const closes = new Date(props.prediction.closes_at)
   const diff = closes.getTime() - now.value.getTime()

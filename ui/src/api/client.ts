@@ -68,12 +68,15 @@ class ApiClient {
   }
 
   async placeBet(predictionId: string, choiceId: string, amount: number): Promise<Bet> {
-    // todo: needs to support updates properly
     return this.request('POST', '/bets', {
       prediction_id: predictionId,
       prediction_choice_id: choiceId,
       amount,
     })
+  }
+
+  async updateBetAmount(betId: string, amount: number): Promise<Bet> {
+    return this.request('PUT', `/bets/${betId}/amount`, { amount })
   }
 
   // User endpoints
