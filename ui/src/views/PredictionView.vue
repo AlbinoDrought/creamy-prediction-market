@@ -34,6 +34,7 @@ const swipeDismissedIncrease = ref(false)
 const SWIPE_THRESHOLD = 80
 
 function onTouchStart(e: TouchEvent) {
+  if (!e.touches[0]) return
   touchStartY.value = e.touches[0].clientY
   touchCurrentY.value = e.touches[0].clientY
   isDragging.value = true
@@ -41,6 +42,7 @@ function onTouchStart(e: TouchEvent) {
 
 function onTouchMove(e: TouchEvent) {
   if (!isDragging.value) return
+  if (!e.touches[0]) return
   touchCurrentY.value = e.touches[0].clientY
 }
 
