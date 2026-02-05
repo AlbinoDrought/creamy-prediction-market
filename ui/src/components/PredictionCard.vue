@@ -2,10 +2,13 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { Prediction } from '@/types/predictions'
 import { PredictionStatus } from '@/types/predictions'
+import { useBetsStore } from '@/stores/bets'
 
 const props = defineProps<{
   prediction: Prediction
 }>()
+
+const betsStore = useBetsStore()
 
 const now = ref(new Date())
 let timer: ReturnType<typeof setInterval> | null = null
@@ -20,7 +23,18 @@ onUnmounted(() => {
   if (timer) clearInterval(timer)
 })
 
+const userBet = computed(() => betsStore.getBetForPrediction(props.prediction.id))
+
 const statusConfig = computed(() => {
+  // If decided and user has a bet, show win/loss status
+  if (props.prediction.status === PredictionStatus.Decided && userBet.value) {
+    if (userBet.value.status === 'won') {
+      return { label: `Won +${userBet.value.won_amount}`, class: 'bg-success/20 text-success' }
+    } else if (userBet.value.status === 'lost') {
+      return { label: 'Lost', class: 'bg-error/20 text-error' }
+    }
+  }
+
   switch (props.prediction.status) {
     case PredictionStatus.Open:
       return { label: 'Open', class: 'bg-success/20 text-success' }
