@@ -24,13 +24,13 @@ onMounted(() => {
 
 const categoryOrder = [
   { key: ShopItemCategory.Hat, label: 'Hats' },
-  { key: ShopItemCategory.AvatarColor, label: 'Avatar Colors' },
-  { key: ShopItemCategory.AvatarEmoji, label: 'Avatar Emojis' },
-  { key: ShopItemCategory.NameEmoji, label: 'Name Emojis' },
   { key: ShopItemCategory.AvatarEffect, label: 'Avatar Effects' },
+  { key: ShopItemCategory.AvatarEmoji, label: 'Avatar Emojis' },
+  { key: ShopItemCategory.AvatarColor, label: 'Avatar Colors' },
   { key: ShopItemCategory.NameEffect, label: 'Name Effects' },
-  { key: ShopItemCategory.NameBold, label: 'Name Style' },
+  { key: ShopItemCategory.NameEmoji, label: 'Name Emojis' },
   { key: ShopItemCategory.NameFont, label: 'Name Fonts' },
+  { key: ShopItemCategory.NameBold, label: 'Name Style' },
   { key: ShopItemCategory.Title, label: 'Titles' },
   { key: ShopItemCategory.GlobalAction, label: 'Global Actions' },
 ]
@@ -72,6 +72,11 @@ function isEquipped(item: ShopItem): boolean {
 
 function canAfford(item: ShopItem): boolean {
   return userCoins.value >= item.price
+}
+
+function sortedItems(category: ShopItemCategory): ShopItem[] {
+  const items = shopStore.itemsByCategory.get(category) ?? []
+  return [...items].sort((a, b) => a.name.localeCompare(b.name))
 }
 
 // Preview cosmetics: what the user would look like with this item
@@ -182,7 +187,7 @@ const confirmPreviewCosmetics = computed(() => {
           <h2 class="text-lg font-bold text-white mb-3">{{ cat.label }}</h2>
           <div class="grid grid-cols-2 gap-3">
             <div
-              v-for="item in shopStore.itemsByCategory.get(cat.key)"
+              v-for="item in sortedItems(cat.key)"
               :key="item.id"
               class="bg-dark-light rounded-xl p-3 flex flex-col items-center gap-2 relative"
               :class="{
