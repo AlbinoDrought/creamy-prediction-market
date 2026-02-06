@@ -14,6 +14,33 @@ As an example, use this during a party to have people submit predictions and hav
 
 This is not intended for production use. This application is unlikely to function correctly.
 
+## Screenshots
+
+| Screenshot | Description |
+|---|---|
+| <img src=".readme/Screen Shot 2026-02-06 at 13.33.21.png" width="250" /> | **Login**: Simple name + PIN login screen |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.33.42.png" width="250" /> | **Home (empty)**: Home screen with no predictions yet |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.37.23.png" width="250" /> | **Home (active)**: An open prediction card on the home feed |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.37.27.png" width="250" /> | **Prediction detail**: Viewing a prediction with choices and live odds |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.37.31.png" width="250" /> | **Placing a bet (10 tokens)**: Bet amount selector with a choice selected |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.37.35.png" width="250" /> | **Placing a bet (100 tokens)**: Larger bet amount with updated potential payout |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.37.38.png" width="250" /> | **Achievement unlocked**: "First Bet" achievement popup after placing a bet |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.37.42.png" width="250" /> | **Bet placed**: Prediction view showing the user's active bet and current odds |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.37.54.png" width="250" /> | **Prediction closed**: Betting is closed, waiting for the outcome to be decided |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.38.00.png" width="250" /> | **Achievement unlocked**: "Double Up" achievement for winning 2x a bet |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.40.16.png" width="250" /> | **Prediction decided**: Outcome revealed with winning choice highlighted in green and payout shown |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.40.22.png" width="250" /> | **Leaderboard**: Player rankings with avatars, cosmetics, titles, and achievement badges |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.40.30.png" width="250" /> | **My Bets**: Personal bet history with win/loss stats and net result |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.40.33.png" width="250" /> | **Shop**: Item shop with hats, effects, emojis, and other cosmetics for sale |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.40.39.png" width="250" /> | **Shop purchase modal**: Preview of a Crown hat on the user's avatar before buying |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.40.42.png" width="250" /> | **Item equipped**: Crown hat purchased and equipped, shown on avatar in the header |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.41.03.png" width="250" /> | **Name effect preview**: Rainbow name effect shown in the purchase preview modal |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.41.21.png" width="250" /> | **Dino minigame**: Chrome dino-style runner game for earning shop coins |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.41.29.png" width="250" /> | **Minigame achievement**: "Gamer" achievement unlocked after first minigame play |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.41.31.png" width="250" /> | **Minigame game over**: Score below 100, no coins earned |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.42.13.png" width="250" /> | **Minigame coins earned**: Score of 105 earns +1 coin for the shop |
+| <img src=".readme/Screen Shot 2026-02-06 at 13.42.20.png" width="250" /> | **Leaderboard (customized)**: Players with full cosmetics: hats, name effects, titles, and avatar items |
+
 ## Usage
 
 Create a config like this:
