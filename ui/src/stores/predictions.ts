@@ -23,16 +23,21 @@ export const usePredictionsStore = defineStore('predictions', () => {
   }
 
   async function fetchPredictions() {
-    loading.value = true
+    const loadingTimeout = setTimeout(() => {
+      loading.value = true
+    }, 70)
     try {
       await swapPredictions()
     } finally {
-      loading.value = false;
+      clearTimeout(loadingTimeout)
+      loading.value = false
     }
   }
 
   async function fetchPrediction(id: string) {
-    loading.value = true
+    const loadingTimeout = setTimeout(() => {
+      loading.value = true
+    }, 70)
     try {
       await swapPredictions()
       currentPrediction.value = predictions.value.find(p => p.prediction.id === id) || null
@@ -40,6 +45,7 @@ export const usePredictionsStore = defineStore('predictions', () => {
         error.value = 'Failed to load prediction'
       }
     } finally {
+      clearTimeout(loadingTimeout)
       loading.value = false
     }
   }

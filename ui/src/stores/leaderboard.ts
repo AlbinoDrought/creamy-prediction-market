@@ -18,11 +18,14 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
   }
 
   async function fetchLeaderboard() {
-    loading.value = true
+    const loadingTimeout = setTimeout(() => {
+      loading.value = true
+    }, 70)
     try {
       await swapLeaderboard()
     } finally {
-      loading.value = false;
+      clearTimeout(loadingTimeout)
+      loading.value = false
     }
   }
 

@@ -61,10 +61,13 @@ export const useBetsStore = defineStore('bets', () => {
   }
 
   async function fetchBets() {
-    loading.value = true
+    const loadingTimeout = setTimeout(() => {
+      loading.value = true
+    }, 70)
     try {
       await swapBets()
     } finally {
+      clearTimeout(loadingTimeout)
       loading.value = false
     }
   }
