@@ -185,6 +185,7 @@ async function placeBet() {
 
 async function increaseBet() {
   if (!existingBet.value || !canIncreaseBet.value) return
+  if (!showIncreaseBetUI.value) return
 
   try {
     const newTotal = existingBet.value.amount + increaseAmount.value
@@ -377,7 +378,7 @@ function goBack() {
     </main>
 
     <!-- Sticky bet action footer for new bets -->
-    <Transition :name="swipeDismissed ? '' : 'slide-up'">
+    <Transition :name="swipeDismissed ? 'none' : 'slide-up'">
       <div
         v-if="canPlaceNewBet && selectedChoice"
         class="fixed bottom-0 left-0 right-0 bg-dark-light border-t border-dark-lighter p-4 pb-24 z-10 touch-pan-x"
@@ -413,7 +414,7 @@ function goBack() {
     </Transition>
 
     <!-- Sticky footer for increasing bet -->
-    <Transition :name="swipeDismissedIncrease ? '' : 'slide-up'">
+    <Transition :name="swipeDismissedIncrease ? 'none' : 'slide-up'">
       <div
         v-if="canIncreaseBet && showIncreaseBetUI"
         class="fixed bottom-0 left-0 right-0 bg-dark-light border-t border-dark-lighter p-4 pb-24 z-10 touch-pan-x"
@@ -472,6 +473,11 @@ function goBack() {
 .fade-leave-to {
   opacity: 0;
   transform: translateY(10px);
+}
+
+.none-enter-active,
+.none-leave-active {
+  transition: all 0s;
 }
 
 .slide-up-enter-active,
