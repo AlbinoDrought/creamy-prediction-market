@@ -44,6 +44,12 @@ const hatEmoji = computed(() => props.cosmetics?.hat || '')
 const hatSizeClass = computed(() => {
   return props.size === 'sm' ? 'text-xs -top-2.5' : 'text-sm -top-3'
 })
+
+const avatarItemEmoji = computed(() => props.cosmetics?.avatar_item || '')
+
+const avatarItemSizeClass = computed(() => {
+  return props.size === 'sm' ? 'text-xs' : 'text-sm'
+})
 </script>
 
 <template>
@@ -69,5 +75,10 @@ const hatSizeClass = computed(() => {
     >
       {{ displayChar }}
     </div>
+    <span
+      v-if="avatarItemEmoji"
+      class="absolute z-10 pointer-events-none leading-none -bottom-0.5 -right-1"
+      :class="avatarItemSizeClass"
+    >{{ avatarItemEmoji }}</span>
   </div>
 </template>

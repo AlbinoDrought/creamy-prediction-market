@@ -13,6 +13,7 @@ const (
 	ShopItemCategoryNameFont     = ShopItemCategory("name_font")
 	ShopItemCategoryTitle        = ShopItemCategory("title")
 	ShopItemCategoryHat          = ShopItemCategory("hat")
+	ShopItemCategoryAvatarItem   = ShopItemCategory("avatar_item")
 	ShopItemCategoryGlobalAction = ShopItemCategory("global_action")
 )
 
@@ -165,9 +166,33 @@ var AllShopItems = []ShopItem{
 	// {ID: "hat_sun", Category: ShopItemCategoryHat, Name: "Sunhat", Price: 10, Icon: "👒", Value: "👒"}, // doesn't work
 	{ID: "hat_cap", Category: ShopItemCategoryHat, Name: "Cap", Price: 5, Icon: "🧢", Value: "🧢"},
 
-	// todo: holdable items, like magic wand, football, etc
-	// todo: medals?
-	// todo: items given from achievements?
+	// Avatar Items
+	{ID: "avatar_item_surrender", Category: ShopItemCategoryAvatarItem, Name: "Surrender", Price: 1, Icon: "🏳️", Value: "🏳️"},
+	{ID: "avatar_item_wine", Category: ShopItemCategoryAvatarItem, Name: "Wine", Price: 5, Icon: "🍷", Value: "🍷"},
+	{ID: "avatar_item_beer", Category: ShopItemCategoryAvatarItem, Name: "Beer", Price: 5, Icon: "🍺", Value: "🍺"},
+	{ID: "avatar_item_liquor", Category: ShopItemCategoryAvatarItem, Name: "Liquor", Price: 5, Icon: "🥃", Value: "🥃"},
+	{ID: "avatar_item_boba", Category: ShopItemCategoryAvatarItem, Name: "Boba", Price: 5, Icon: "🧋", Value: "🧋"},
+	{ID: "avatar_item_dice", Category: ShopItemCategoryAvatarItem, Name: "Dice", Price: 5, Icon: "🎲", Value: "🎲"},
+	{ID: "avatar_item_football", Category: ShopItemCategoryAvatarItem, Name: "Football", Price: 5, Icon: "🏈", Value: "🏈"},
+	{ID: "avatar_item_soccer", Category: ShopItemCategoryAvatarItem, Name: "Soccer", Price: 5, Icon: "⚽", Value: "⚽"},
+	{ID: "avatar_item_basketball", Category: ShopItemCategoryAvatarItem, Name: "Basketball", Price: 5, Icon: "🏀", Value: "🏀"},
+	{ID: "avatar_item_volleyball", Category: ShopItemCategoryAvatarItem, Name: "Volleyball", Price: 5, Icon: "🏐", Value: "🏐"},
+	{ID: "avatar_item_baseball", Category: ShopItemCategoryAvatarItem, Name: "Baseball", Price: 5, Icon: "⚾", Value: "⚾"},
+	{ID: "avatar_item_tennis", Category: ShopItemCategoryAvatarItem, Name: "Tennis", Price: 10, Icon: "🎾", Value: "🎾"},
+	{ID: "avatar_item_magic_wand", Category: ShopItemCategoryAvatarItem, Name: "Magic Wand", Price: 10, Icon: "🪄", Value: "🪄"},
+	{ID: "avatar_item_banjo", Category: ShopItemCategoryAvatarItem, Name: "Banjo", Price: 10, Icon: "🪕", Value: "🪕"},
+	{ID: "avatar_item_guitar", Category: ShopItemCategoryAvatarItem, Name: "Guitar", Price: 10, Icon: "🎸", Value: "🎸"},
+	{ID: "avatar_item_rose", Category: ShopItemCategoryAvatarItem, Name: "Rose", Price: 10, Icon: "🌹", Value: "🌹"},
+	{ID: "avatar_item_cookie", Category: ShopItemCategoryAvatarItem, Name: "Cookie", Price: 5, Icon: "🍪", Value: "🍪"},
+	{ID: "avatar_item_pizza", Category: ShopItemCategoryAvatarItem, Name: "Pizza", Price: 10, Icon: "🍕", Value: "🍕"},
+	{ID: "avatar_item_burrito", Category: ShopItemCategoryAvatarItem, Name: "Burrito", Price: 10, Icon: "🌯", Value: "🌯"},
+	{ID: "avatar_item_happycat", Category: ShopItemCategoryAvatarItem, Name: "Happy Cat", Price: 10, Icon: "😺", Value: "😺"},
+	{ID: "avatar_item_sadcat", Category: ShopItemCategoryAvatarItem, Name: "Sad Cat", Price: 10, Icon: "😿", Value: "😿"},
+	{ID: "avatar_item_dog", Category: ShopItemCategoryAvatarItem, Name: "Dog", Price: 10, Icon: "🐕", Value: "🐕"},
+	{ID: "avatar_item_zebra", Category: ShopItemCategoryAvatarItem, Name: "Zebra", Price: 15, Icon: "🦓", Value: "🦓"},
+	{ID: "avatar_item_orangutan", Category: ShopItemCategoryAvatarItem, Name: "Orangutan", Price: 15, Icon: "🦧", Value: "🦧"},
+	{ID: "avatar_item_peace", Category: ShopItemCategoryAvatarItem, Name: "Peace", Price: 5, Icon: "✌️", Value: "✌️"},
+	{ID: "avatar_item_controller", Category: ShopItemCategoryAvatarItem, Name: "Controller", Price: 15, Icon: "🎮", Value: "🎮"},
 
 	// Global Actions (consumable)
 	{ID: "global_snowflakes", Category: ShopItemCategoryGlobalAction, Name: "Snowflakes", Price: 25, Icon: "❄️", Value: "snowflakes", Consumable: true},

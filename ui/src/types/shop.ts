@@ -24,6 +24,7 @@ export const ShopItemCategory = {
   NameFont: "name_font",
   Title: "title",
   Hat: "hat",
+  AvatarItem: "avatar_item",
   GlobalAction: "global_action",
 } as const;
 

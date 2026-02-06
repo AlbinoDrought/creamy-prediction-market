@@ -25,6 +25,7 @@ onMounted(() => {
 
 const categoryOrder = [
   { key: ShopItemCategory.Hat, label: 'Hats' },
+  { key: ShopItemCategory.AvatarItem, label: 'Avatar Items' },
   { key: ShopItemCategory.AvatarEffect, label: 'Avatar Effects' },
   { key: ShopItemCategory.AvatarEmoji, label: 'Avatar Emojis' },
   { key: ShopItemCategory.AvatarColor, label: 'Avatar Colors' },
@@ -48,6 +49,7 @@ const userCosmetics = computed(() => authStore.user?.cosmetics || {
   name_font: '',
   title: '',
   hat: '',
+  avatar_item: '',
 })
 
 function isOwned(item: ShopItem): boolean {
@@ -67,6 +69,7 @@ function isEquipped(item: ShopItem): boolean {
     case ShopItemCategory.NameFont: return c.name_font === item.value
     case ShopItemCategory.Title: return c.title === item.value
     case ShopItemCategory.Hat: return c.hat === item.value
+    case ShopItemCategory.AvatarItem: return c.avatar_item === item.value
     default: return false
   }
 }
@@ -93,6 +96,7 @@ function previewCosmetics(item: ShopItem) {
     case ShopItemCategory.NameFont: base.name_font = item.value; break
     case ShopItemCategory.Title: base.title = item.value; break
     case ShopItemCategory.Hat: base.hat = item.value; break
+    case ShopItemCategory.AvatarItem: base.avatar_item = item.value; break
   }
   return base
 }

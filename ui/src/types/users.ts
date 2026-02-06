@@ -12,6 +12,7 @@ export interface UserCosmetics {
     name_font: string;
     title: string;
     hat: string;
+    avatar_item: string;
 }
 
 export interface User {

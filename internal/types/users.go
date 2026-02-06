@@ -10,7 +10,8 @@ type UserCosmetics struct {
 	NameBold     bool   `json:"name_bold,omitempty"`
 	NameFont     string `json:"name_font,omitempty"` // serif, mono, cursive
 	Title        string `json:"title,omitempty"`     // replaces "Player"
-	Hat          string `json:"hat,omitempty"`       // emoji displayed above avatar
+	Hat          string `json:"hat,omitempty"`         // emoji displayed above avatar
+	AvatarItem   string `json:"avatar_item,omitempty"` // emoji displayed at bottom-right of avatar
 }
 
 type User struct {

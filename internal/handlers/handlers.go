@@ -409,6 +409,8 @@ func (h *Handler) EquipItem(w http.ResponseWriter, r *http.Request) {
 		cosmetics.Title = item.Value
 	case types.ShopItemCategoryHat:
 		cosmetics.Hat = item.Value
+	case types.ShopItemCategoryAvatarItem:
+		cosmetics.AvatarItem = item.Value
 	default:
 		h.errorResponse(w, http.StatusBadRequest, "This item cannot be equipped")
 		return
@@ -448,6 +450,8 @@ func (h *Handler) UnequipCategory(w http.ResponseWriter, r *http.Request) {
 		cosmetics.Title = ""
 	case types.ShopItemCategoryHat:
 		cosmetics.Hat = ""
+	case types.ShopItemCategoryAvatarItem:
+		cosmetics.AvatarItem = ""
 	default:
 		h.errorResponse(w, http.StatusBadRequest, "Invalid category")
 		return
