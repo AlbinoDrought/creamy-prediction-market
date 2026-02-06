@@ -21,10 +21,10 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-bg flex flex-col items-center justify-center p-6">
+  <div class="min-h-screen bg-bg flex flex-col items-center p-6">
     <div class="w-full max-w-sm">
       <!-- Logo/Title -->
-      <div class="text-center mb-8">
+      <div class="text-center mb-8 mt-8">
         <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
           <svg class="w-10 h-10 text-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -48,6 +48,7 @@ async function handleSubmit() {
             required
             class="w-full bg-dark border border-dark-lighter rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-colors"
             placeholder="Enter your name"
+            autofocus
           />
         </div>
 
