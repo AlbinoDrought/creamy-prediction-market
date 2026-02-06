@@ -41,6 +41,12 @@ const router = createRouter({
       meta: { requiresAuth: true, playerOnly: true },
     },
     {
+      path: '/minigame',
+      name: 'minigame',
+      component: () => import('@/views/MinigameView.vue'),
+      meta: { requiresAuth: true, playerOnly: true },
+    },
+    {
       path: '/admin',
       component: () => import('@/views/admin/AdminLayout.vue'),
       meta: { requiresAuth: true, requiresAdmin: true },

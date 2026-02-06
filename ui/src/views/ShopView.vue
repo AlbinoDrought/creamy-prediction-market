@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useShopStore } from '@/stores/shop'
 import { ShopItemCategory } from '@/types/shop'
@@ -9,6 +10,7 @@ import BottomNav from '@/components/BottomNav.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import UserName from '@/components/UserName.vue'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const shopStore = useShopStore()
 
@@ -226,6 +228,21 @@ const confirmPreviewCosmetics = computed(() => {
         >
           Owned
         </button>
+      </div>
+
+      <!-- Minigame link -->
+      <div
+        class="flex items-center justify-between bg-dark-light rounded-xl px-4 py-3 mb-4 cursor-pointer hover:bg-dark-lighter transition-colors"
+        @click="router.push({ name: 'minigame' })"
+      >
+        <div class="flex items-center gap-3">
+          <span class="text-xl">🦖</span>
+          <div>
+            <p class="text-sm font-bold text-white">Need more item coins?</p>
+            <p class="text-xs text-gray-400">Play the dino game to earn up to 5 per round</p>
+          </div>
+        </div>
+        <span class="text-gray-400 text-lg">&rsaquo;</span>
       </div>
 
       <!-- Category sections -->

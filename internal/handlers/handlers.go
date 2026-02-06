@@ -445,6 +445,66 @@ func (h *Handler) Spin(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// Minigame endpoints
+
+type ClaimMinigameCoinsRequest struct {
+	Score int64 `json:"score"`
+}
+
+func (h *Handler) ClaimMinigameCoins(w http.ResponseWriter, r *http.Request) {
+	user, _ := h.getAuthenticatedUser(r)
+
+	var req ClaimMinigameCoinsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.errorResponse(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if req.Score < 0 {
+		req.Score = 0
+	}
+
+	// 1 coin per 100 points, capped at 5
+	coinsEarned := req.Score / 100
+	if coinsEarned > 5 {
+		coinsEarned = 5
+	}
+
+	if coinsEarned > 0 {
+		if err := h.Store.AddCoins(user.ID, coinsEarned); err != nil {
+			h.Logger.WithError(err).Error("failed to award minigame coins")
+			h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+			return
+		}
+	}
+
+	// Track plays
+	plays, err := h.Store.IncrementMinigamePlays(user.ID)
+	if err != nil {
+		h.Logger.WithError(err).Error("failed to increment minigame plays")
+	}
+
+	// Achievements
+	h.grantAchievement(user.ID, types.AchievementMinigame)
+	if req.Score >= 500 {
+		h.grantAchievement(user.ID, types.AchievementMinigameHighScore)
+	}
+	if req.Score >= 1000 {
+		h.grantAchievement(user.ID, types.AchievementMinigame1000)
+	}
+	if req.Score >= 2000 {
+		h.grantAchievement(user.ID, types.AchievementMinigame2000)
+	}
+	if plays >= 10 {
+		h.grantAchievement(user.ID, types.AchievementMinigamePlays10)
+	}
+	if plays >= 50 {
+		h.grantAchievement(user.ID, types.AchievementMinigamePlays50)
+	}
+
+	h.jsonResponse(w, http.StatusOK, map[string]int64{"coins_earned": coinsEarned})
+}
+
 // Shop endpoints
 
 func (h *Handler) ListShopItems(w http.ResponseWriter, r *http.Request) {
@@ -1295,6 +1355,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("DELETE /api/shop/equip/{category}", h.requireAuth(h.UnequipCategory))
 	mux.HandleFunc("POST /api/bets", h.requireAuth(h.PlaceBet))
 	mux.HandleFunc("PUT /api/bets/{id}/amount", h.requireAuth(h.IncreaseBetAmount))
+	mux.HandleFunc("POST /api/minigame/claim", h.requireAuth(h.ClaimMinigameCoins))
 
 	// Admin
 	mux.HandleFunc("GET /api/admin/users", h.requireAdmin(h.ListUsers))

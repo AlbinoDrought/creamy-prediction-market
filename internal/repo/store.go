@@ -301,6 +301,23 @@ func (s *Store) IncrementSpins(id string) (int64, error) {
 	return user.Spins, nil
 }
 
+func (s *Store) IncrementMinigamePlays(id string) (int64, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	user, ok := s.users[id]
+	if !ok {
+		return 0, ErrUserNotFound
+	}
+
+	s.dirty = true
+
+	user.MinigamePlays++
+	s.users[user.ID] = user
+
+	return user.MinigamePlays, nil
+}
+
 // Shop methods
 
 var ErrInsufficientCoins = errors.New("insufficient coins")

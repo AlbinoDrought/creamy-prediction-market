@@ -22,8 +22,9 @@ type User struct {
 	PINHash []byte `json:"pin_hash,omitempty"`
 	Admin   bool   `json:"admin"`
 
-	Tokens int64 `json:"tokens"`
-	Spins  int64 `json:"spins"`
+	Tokens        int64 `json:"tokens"`
+	Spins         int64 `json:"spins"`
+	MinigamePlays int64 `json:"minigame_plays"`
 
 	Coins      int64         `json:"coins"`
 	OwnedItems []string      `json:"owned_items"`

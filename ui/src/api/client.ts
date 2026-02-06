@@ -110,6 +110,10 @@ class ApiClient {
     return this.request('POST', '/spin')
   }
 
+  async claimMinigameCoins(score: number): Promise<{ coins_earned: number }> {
+    return this.request('POST', '/minigame/claim', { score })
+  }
+
   // Shop endpoints
   async getShopItems(): Promise<ShopItem[]> {
     return this.request('GET', '/shop')

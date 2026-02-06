@@ -215,6 +215,7 @@ func main() {
 		"/leaderboard",
 		"/my-bets",
 		"/shop",
+		"/minigame",
 		"/admin",
 		"/admin/predictions/new",
 		"/admin/predictions/{id}",

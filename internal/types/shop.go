@@ -72,6 +72,7 @@ var AllShopItems = []ShopItem{
 	{ID: "avatar_emoji_sparkles", Category: ShopItemCategoryAvatarEmoji, Name: "Sparkles", Price: 25, Icon: "✨", Value: "✨"},
 	{ID: "avatar_emoji_star", Category: ShopItemCategoryAvatarEmoji, Name: "Star", Price: 25, Icon: "🌟", Value: "🌟"},
 	{ID: "avatar_emoji_alien", Category: ShopItemCategoryAvatarEmoji, Name: "Alien", Price: 15, Icon: "👽", Value: "👽"},
+	{ID: "avatar_emoji_dino", Category: ShopItemCategoryAvatarEmoji, Name: "Dino", Price: 0, Icon: "🦖", Value: "🦖", Locked: true},
 
 	// Name Emojis
 	{ID: "name_emoji_canada", Category: ShopItemCategoryNameEmoji, Name: "Canada", Price: 0, Icon: "🇨🇦", Value: "🇨🇦"},
@@ -88,6 +89,7 @@ var AllShopItems = []ShopItem{
 	{ID: "name_emoji_rocket", Category: ShopItemCategoryNameEmoji, Name: "Rocket", Price: 20, Icon: "🚀", Value: "🚀"},
 	{ID: "name_emoji_trophy", Category: ShopItemCategoryNameEmoji, Name: "Trophy", Price: 25, Icon: "🏆", Value: "🏆"},
 	{ID: "name_emoji_moneybags", Category: ShopItemCategoryNameEmoji, Name: "Moneybags", Price: 30, Icon: "💰", Value: "💰"},
+	{ID: "name_emoji_dino", Category: ShopItemCategoryNameEmoji, Name: "Dino", Price: 0, Icon: "🦖", Value: "🦖", Locked: true},
 
 	// Avatar Effects
 	{ID: "avatar_effect_glow", Category: ShopItemCategoryAvatarEffect, Name: "Glow", Price: 10, Icon: "💡", Value: "glow"},
@@ -165,6 +167,7 @@ var AllShopItems = []ShopItem{
 	{ID: "title_touch_grass", Category: ShopItemCategoryTitle, Name: "Needs To Touch Grass", Price: 10, Value: "Needs To Touch Grass"},
 	{ID: "title_lurker", Category: ShopItemCategoryTitle, Name: "Lurker", Price: 5, Value: "Lurker"},
 	{ID: "title_winning", Category: ShopItemCategoryTitle, Name: "Winning", Price: 0, Value: "Winning", Locked: true},
+	{ID: "title_dino_whisperer", Category: ShopItemCategoryTitle, Name: "Dino Whisperer", Price: 0, Value: "Dino Whisperer", Locked: true},
 
 	// Hats
 	{ID: "hat_crown", Category: ShopItemCategoryHat, Name: "Crown", Price: 20, Icon: "👑", Value: "👑"},
@@ -175,6 +178,7 @@ var AllShopItems = []ShopItem{
 	// {ID: "hat_sun", Category: ShopItemCategoryHat, Name: "Sunhat", Price: 10, Icon: "👒", Value: "👒"}, // doesn't work
 	{ID: "hat_cap", Category: ShopItemCategoryHat, Name: "Cap", Price: 5, Icon: "🧢", Value: "🧢"},
 	{ID: "hat_poop", Category: ShopItemCategoryHat, Name: "Poop", Price: 0, Icon: "💩", Value: "💩", Locked: true},
+	{ID: "hat_dino", Category: ShopItemCategoryHat, Name: "Dino", Price: 0, Icon: "🦕", Value: "🦕", Locked: true},
 
 	// Avatar Items
 	{ID: "avatar_item_surrender", Category: ShopItemCategoryAvatarItem, Name: "Surrender", Price: 1, Icon: "🏳️", Value: "🏳️"},
@@ -203,6 +207,7 @@ var AllShopItems = []ShopItem{
 	{ID: "avatar_item_orangutan", Category: ShopItemCategoryAvatarItem, Name: "Orangutan", Price: 15, Icon: "🦧", Value: "🦧"},
 	{ID: "avatar_item_peace", Category: ShopItemCategoryAvatarItem, Name: "Peace", Price: 5, Icon: "✌️", Value: "✌️"},
 	{ID: "avatar_item_controller", Category: ShopItemCategoryAvatarItem, Name: "Controller", Price: 15, Icon: "🎮", Value: "🎮"},
+	{ID: "avatar_item_bone", Category: ShopItemCategoryAvatarItem, Name: "Bone", Price: 0, Icon: "🦴", Value: "🦴", Locked: true},
 
 	// Global Actions (consumable)
 	{ID: "global_snowflakes", Category: ShopItemCategoryGlobalAction, Name: "Snowflakes", Price: 25, Icon: "❄️", Value: "snowflakes", Consumable: true},

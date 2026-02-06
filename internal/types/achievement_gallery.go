@@ -59,6 +59,14 @@ const (
 	AchievementSpinner      = "spinner"
 	AchievementSpinner10    = "spinner_10"
 	AchievementSpinner100   = "spinner_100"
+
+	// Minigame
+	AchievementMinigame          = "minigame"
+	AchievementMinigameHighScore = "minigame_high_score"
+	AchievementMinigame1000      = "minigame_1000"
+	AchievementMinigame2000      = "minigame_2000"
+	AchievementMinigamePlays10   = "minigame_plays_10"
+	AchievementMinigamePlays50   = "minigame_plays_50"
 )
 
 // AllAchievements is the complete list of available achievements
@@ -122,6 +130,14 @@ var AllAchievements = []Achievement{
 	{ID: AchievementSpinner, Name: "Fidget Spinner", Description: "Spin your avatar", Icon: "🌀", CoinReward: 1},
 	{ID: AchievementSpinner10, Name: "Dizzy", Description: "Spin your avatar 10 times", Icon: "😵‍💫", CoinReward: 3},
 	{ID: AchievementSpinner100, Name: "Centrifuge", Description: "Spin your avatar 100 times", Icon: "🌪️", CoinReward: 10},
+
+	// Minigame
+	{ID: AchievementMinigame, Name: "Gamer", Description: "Play the minigame", Icon: "🎮", CoinReward: 1},
+	{ID: AchievementMinigameHighScore, Name: "Dino Master", Description: "Score 500+ in the minigame", Icon: "🦖", CoinReward: 5, ItemReward: "avatar_emoji_dino"},
+	{ID: AchievementMinigame1000, Name: "Fossil Hunter", Description: "Score 1000+ in the minigame", Icon: "🦴", CoinReward: 10, ItemReward: "avatar_item_bone"},
+	{ID: AchievementMinigame2000, Name: "Extinction Event", Description: "Score 2000+ in the minigame", Icon: "☄️", CoinReward: 25, ItemReward: "title_dino_whisperer"},
+	{ID: AchievementMinigamePlays10, Name: "Addicted", Description: "Play the minigame 10 times", Icon: "🔁", CoinReward: 3, ItemReward: "name_emoji_dino"},
+	{ID: AchievementMinigamePlays50, Name: "Jurassic Park", Description: "Play the minigame 50 times", Icon: "🏞️", CoinReward: 10, ItemReward: "hat_dino"},
 }
 
 // GetAchievementByID returns an achievement by its ID
