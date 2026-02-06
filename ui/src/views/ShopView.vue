@@ -17,6 +17,7 @@ const buyError = ref<string | null>(null)
 
 // Confirmation modal state
 const confirmItem = ref<ShopItem | null>(null)
+const confirmMode = ref<'buy' | 'equip'>('buy')
 
 onMounted(() => {
   shopStore.fetchShopItems()
@@ -99,6 +100,13 @@ function previewCosmetics(item: ShopItem) {
 function promptBuy(item: ShopItem) {
   buyError.value = null
   confirmItem.value = item
+  confirmMode.value = 'buy'
+}
+
+function promptEquip(item: ShopItem) {
+  buyError.value = null
+  confirmItem.value = item
+  confirmMode.value = 'equip'
 }
 
 function cancelBuy() {
@@ -140,6 +148,13 @@ async function toggleEquip(item: ShopItem) {
   }
 }
 
+async function confirmEquip() {
+  const item = confirmItem.value
+  if (!item) return
+  confirmItem.value = null
+  await toggleEquip(item)
+}
+
 function onItemClick(item: ShopItem) {
   if (isButtonDisabled(item)) return
   if (item.consumable) {
@@ -147,7 +162,7 @@ function onItemClick(item: ShopItem) {
   } else if (!isOwned(item)) {
     promptBuy(item)
   } else {
-    toggleEquip(item)
+    promptEquip(item)
   }
 }
 
@@ -269,11 +284,20 @@ const confirmPreviewCosmetics = computed(() => {
               Cancel
             </button>
             <button
+              v-if="confirmMode === 'buy'"
               class="flex-1 py-2.5 rounded-lg bg-yellow-500/20 text-yellow-300 font-bold transition-colors hover:bg-yellow-500/30"
               :disabled="!canAfford(confirmItem)"
               @click="confirmBuy"
             >
               Buy · {{ confirmItem.price }} 🪙
+            </button>
+            <button
+              v-else
+              class="flex-1 py-2.5 rounded-lg font-bold transition-colors"
+              :class="isEquipped(confirmItem) ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' : 'bg-primary/20 text-primary hover:bg-primary/30'"
+              @click="confirmEquip"
+            >
+              {{ isEquipped(confirmItem) ? 'Unequip' : 'Equip' }}
             </button>
           </div>
         </div>
