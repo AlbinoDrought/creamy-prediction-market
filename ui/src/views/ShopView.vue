@@ -37,7 +37,17 @@ const categoryOrder = [
 
 const userCoins = computed(() => authStore.user?.coins ?? 0)
 const ownedItems = computed(() => new Set(authStore.user?.owned_items ?? []))
-const userCosmetics = computed(() => authStore.user?.cosmetics)
+const userCosmetics = computed(() => authStore.user?.cosmetics || {
+  avatar_color: '',
+  avatar_emoji: '',
+  name_emoji: '',
+  avatar_effect: '',
+  name_effect: '',
+  name_bold: false,
+  name_font: '',
+  title: '',
+  hat: '',
+})
 
 function isOwned(item: ShopItem): boolean {
   return ownedItems.value.has(item.id)
@@ -126,6 +136,7 @@ async function toggleEquip(item: ShopItem) {
 }
 
 function onItemClick(item: ShopItem) {
+  if (isButtonDisabled(item)) return
   if (item.consumable) {
     promptBuy(item)
   } else if (!isOwned(item)) {

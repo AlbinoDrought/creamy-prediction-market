@@ -20,7 +20,7 @@ function goToLeaderboard() {
 const spinState = (() => {
   // Singleton: reuse across component instances
   const key = '__avatarSpin'
-  const w = window as Record<string, unknown>
+  const w = window as any as Record<string, unknown>
   if (w[key]) return w[key] as ReturnType<typeof createSpinState>
   const state = createSpinState()
   w[key] = state
