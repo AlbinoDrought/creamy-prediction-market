@@ -2,6 +2,8 @@
 import { computed } from 'vue'
 import type { LeaderboardUser } from '@/types/users'
 import { useAchievementsStore } from '@/stores/achievements'
+import UserAvatar from '@/components/UserAvatar.vue'
+import UserName from '@/components/UserName.vue'
 
 const props = defineProps<{
   user: LeaderboardUser
@@ -55,19 +57,21 @@ const rankClass = computed(() => {
 
     <!-- Avatar & Name -->
     <div class="flex-1 flex items-center gap-3">
-      <div
-        class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-dark"
-        :class="user.rank <= 3
-          ? 'bg-gradient-to-br from-primary to-secondary'
-          : 'bg-dark-lighter text-gray-400'"
-      >
-        {{ user.name.charAt(0).toUpperCase() }}
-      </div>
+      <UserAvatar
+        :name="user.name"
+        :cosmetics="user.cosmetics"
+        :rank-top3="user.rank <= 3"
+      />
       <div>
-        <p class="font-medium" :class="isCurrentUser ? 'text-primary' : 'text-white'">
-          {{ user.name }}
+        <p class="font-medium">
+          <UserName
+            :name="user.name"
+            :cosmetics="user.cosmetics"
+            :is-current-user="isCurrentUser"
+          />
           <span v-if="isCurrentUser" class="text-xs text-primary/70 ml-1">(you)</span>
         </p>
+        <p v-if="user.cosmetics?.title" class="text-xs text-gray-400">{{ user.cosmetics.title }}</p>
         <p v-if="achievementIcons.length > 0" class="text-sm mt-0.5">
           <span v-for="(icon, index) in achievementIcons" :key="index" class="mr-0.5">{{ icon }}</span>
         </p>

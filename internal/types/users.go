@@ -1,5 +1,18 @@
 package types
 
+// UserCosmetics represents the currently equipped cosmetic values for a user.
+type UserCosmetics struct {
+	AvatarColor  string `json:"avatar_color,omitempty"`  // hex pair "from,to" e.g. "#EF4444,#F97316"
+	AvatarEmoji  string `json:"avatar_emoji,omitempty"`  // emoji replaces letter
+	NameEmoji    string `json:"name_emoji,omitempty"`    // emoji next to name
+	AvatarEffect string `json:"avatar_effect,omitempty"` // CSS class: glow, sparkle, fire, rainbow
+	NameEffect   string `json:"name_effect,omitempty"`   // CSS class: glow, sparkle, rainbow
+	NameBold     bool   `json:"name_bold,omitempty"`
+	NameFont     string `json:"name_font,omitempty"` // serif, mono, cursive
+	Title        string `json:"title,omitempty"`     // replaces "Player"
+	Hat          string `json:"hat,omitempty"`       // emoji displayed above avatar
+}
+
 type User struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -10,14 +23,19 @@ type User struct {
 
 	Tokens int64 `json:"tokens"`
 	Spins  int64 `json:"spins"`
+
+	Coins      int64         `json:"coins"`
+	OwnedItems []string      `json:"owned_items"`
+	Cosmetics  UserCosmetics `json:"cosmetics"`
 }
 
 type LeaderboardUser struct {
-	ID           string   `json:"id"`
-	Name         string   `json:"name"`
-	Tokens       int64    `json:"tokens"`
-	Rank         int      `json:"rank"`
-	Achievements []string `json:"achievements"`
+	ID           string        `json:"id"`
+	Name         string        `json:"name"`
+	Tokens       int64         `json:"tokens"`
+	Rank         int           `json:"rank"`
+	Achievements []string      `json:"achievements"`
+	Cosmetics    UserCosmetics `json:"cosmetics"`
 }
 
 type TokenChangeCause string

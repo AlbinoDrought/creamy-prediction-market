@@ -31,6 +31,7 @@ type Config struct {
 	RepoPath string `json:"repo_path"`
 
 	StartingTokens int64 `json:"starting_tokens"`
+	StartingCoins  int64 `json:"starting_coins"`
 }
 
 func main() {
@@ -185,6 +186,7 @@ func main() {
 		Store:          store,
 		Logger:         logger,
 		StartingTokens: config.StartingTokens,
+		StartingCoins:  config.StartingCoins,
 		EventHub:       eventHub,
 	}
 
@@ -212,6 +214,7 @@ func main() {
 		"/predictions/{id}",
 		"/leaderboard",
 		"/my-bets",
+		"/shop",
 		"/admin",
 		"/admin/predictions/new",
 		"/admin/predictions/{id}",

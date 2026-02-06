@@ -301,6 +301,106 @@ func (s *Store) IncrementSpins(id string) (int64, error) {
 	return user.Spins, nil
 }
 
+// Shop methods
+
+var ErrInsufficientCoins = errors.New("insufficient coins")
+var ErrItemAlreadyOwned = errors.New("item already owned")
+
+func (s *Store) AddCoins(userID string, amount int64) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	user, ok := s.users[userID]
+	if !ok {
+		return ErrUserNotFound
+	}
+
+	s.dirty = true
+	user.Coins += amount
+	s.users[userID] = user
+	return nil
+}
+
+func (s *Store) DeductCoins(userID string, amount int64) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	user, ok := s.users[userID]
+	if !ok {
+		return ErrUserNotFound
+	}
+	if user.Coins < amount {
+		return ErrInsufficientCoins
+	}
+
+	s.dirty = true
+	user.Coins -= amount
+	s.users[userID] = user
+	return nil
+}
+
+func (s *Store) UserOwnsItem(userID, itemID string) bool {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	user, ok := s.users[userID]
+	if !ok {
+		return false
+	}
+	for _, id := range user.OwnedItems {
+		if id == itemID {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Store) AddOwnedItem(userID, itemID string) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	user, ok := s.users[userID]
+	if !ok {
+		return ErrUserNotFound
+	}
+	for _, id := range user.OwnedItems {
+		if id == itemID {
+			return ErrItemAlreadyOwned
+		}
+	}
+
+	s.dirty = true
+	user.OwnedItems = append(user.OwnedItems, itemID)
+	s.users[userID] = user
+	return nil
+}
+
+func (s *Store) GetUserCosmetics(userID string) types.UserCosmetics {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	user, ok := s.users[userID]
+	if !ok {
+		return types.UserCosmetics{}
+	}
+	return user.Cosmetics
+}
+
+func (s *Store) SetCosmetics(userID string, cosmetics types.UserCosmetics) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	user, ok := s.users[userID]
+	if !ok {
+		return ErrUserNotFound
+	}
+
+	s.dirty = true
+	user.Cosmetics = cosmetics
+	s.users[userID] = user
+	return nil
+}
+
 // Session methods
 
 func (s *Store) CreateSession(token, userID string) {

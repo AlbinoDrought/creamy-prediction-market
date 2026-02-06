@@ -25,6 +25,7 @@ type Handler struct {
 	Store          *repo.Store
 	Logger         *logrus.Logger
 	StartingTokens int64
+	StartingCoins  int64
 	EventHub       *events.Hub
 }
 
@@ -135,6 +136,13 @@ func (h *Handler) grantAchievement(userID, achievementID string) {
 		return
 	}
 	if granted {
+		// Award coins for achievement
+		achievement, ok := types.GetAchievementByID(achievementID)
+		if ok && achievement.CoinReward > 0 {
+			if err := h.Store.AddCoins(userID, achievement.CoinReward); err != nil {
+				h.Logger.WithError(err).Error("failed to award coins for achievement")
+			}
+		}
 		h.EventHub.EmitAchievement(userID, achievementID)
 		// Update leaderboard to show new achievement
 		// Try to avoid emitting a ton of these though: at most once every 10s
@@ -269,6 +277,7 @@ func (h *Handler) ShowLeaderboard(w http.ResponseWriter, r *http.Request) {
 			Name:         u.Name,
 			Tokens:       u.Tokens,
 			Achievements: h.Store.GetUserAchievementIDs(u.ID),
+			Cosmetics:    h.Store.GetUserCosmetics(u.ID),
 		})
 	}
 
@@ -315,6 +324,142 @@ func (h *Handler) Spin(w http.ResponseWriter, r *http.Request) {
 		h.grantAchievement(user.ID, types.AchievementSpinner100)
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// Shop endpoints
+
+func (h *Handler) ListShopItems(w http.ResponseWriter, r *http.Request) {
+	h.jsonResponse(w, http.StatusOK, types.AllShopItems)
+}
+
+func (h *Handler) BuyShopItem(w http.ResponseWriter, r *http.Request) {
+	user, _ := h.getAuthenticatedUser(r)
+	itemID := r.PathValue("itemId")
+
+	item, ok := types.GetShopItemByID(itemID)
+	if !ok {
+		h.errorResponse(w, http.StatusNotFound, "Item not found")
+		return
+	}
+
+	// Non-consumable items can only be bought once
+	if !item.Consumable && h.Store.UserOwnsItem(user.ID, itemID) {
+		h.errorResponse(w, http.StatusConflict, "You already own this item")
+		return
+	}
+
+	if err := h.Store.DeductCoins(user.ID, item.Price); err == repo.ErrInsufficientCoins {
+		h.errorResponse(w, http.StatusBadRequest, "Insufficient coins")
+		return
+	} else if err != nil {
+		h.Logger.WithError(err).Error("failed to deduct coins")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+
+	// Consumable items trigger a global effect immediately
+	if item.Consumable {
+		h.EventHub.EmitGlobalAction(user.Name, item.Value)
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	if err := h.Store.AddOwnedItem(user.ID, itemID); err != nil {
+		h.Logger.WithError(err).Error("failed to add owned item")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) EquipItem(w http.ResponseWriter, r *http.Request) {
+	user, _ := h.getAuthenticatedUser(r)
+	itemID := r.PathValue("itemId")
+
+	item, ok := types.GetShopItemByID(itemID)
+	if !ok {
+		h.errorResponse(w, http.StatusNotFound, "Item not found")
+		return
+	}
+
+	if !h.Store.UserOwnsItem(user.ID, itemID) {
+		h.errorResponse(w, http.StatusForbidden, "You don't own this item")
+		return
+	}
+
+	cosmetics := h.Store.GetUserCosmetics(user.ID)
+
+	switch item.Category {
+	case types.ShopItemCategoryAvatarColor:
+		cosmetics.AvatarColor = item.Value
+	case types.ShopItemCategoryAvatarEmoji:
+		cosmetics.AvatarEmoji = item.Value
+	case types.ShopItemCategoryNameEmoji:
+		cosmetics.NameEmoji = item.Value
+	case types.ShopItemCategoryAvatarEffect:
+		cosmetics.AvatarEffect = item.Value
+	case types.ShopItemCategoryNameEffect:
+		cosmetics.NameEffect = item.Value
+	case types.ShopItemCategoryNameBold:
+		cosmetics.NameBold = true
+	case types.ShopItemCategoryNameFont:
+		cosmetics.NameFont = item.Value
+	case types.ShopItemCategoryTitle:
+		cosmetics.Title = item.Value
+	case types.ShopItemCategoryHat:
+		cosmetics.Hat = item.Value
+	default:
+		h.errorResponse(w, http.StatusBadRequest, "This item cannot be equipped")
+		return
+	}
+
+	if err := h.Store.SetCosmetics(user.ID, cosmetics); err != nil {
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+
+	h.EventHub.EmitLeaderboard()
+	h.jsonResponse(w, http.StatusOK, cosmetics)
+}
+
+func (h *Handler) UnequipCategory(w http.ResponseWriter, r *http.Request) {
+	user, _ := h.getAuthenticatedUser(r)
+	category := r.PathValue("category")
+
+	cosmetics := h.Store.GetUserCosmetics(user.ID)
+
+	switch types.ShopItemCategory(category) {
+	case types.ShopItemCategoryAvatarColor:
+		cosmetics.AvatarColor = ""
+	case types.ShopItemCategoryAvatarEmoji:
+		cosmetics.AvatarEmoji = ""
+	case types.ShopItemCategoryNameEmoji:
+		cosmetics.NameEmoji = ""
+	case types.ShopItemCategoryAvatarEffect:
+		cosmetics.AvatarEffect = ""
+	case types.ShopItemCategoryNameEffect:
+		cosmetics.NameEffect = ""
+	case types.ShopItemCategoryNameBold:
+		cosmetics.NameBold = false
+	case types.ShopItemCategoryNameFont:
+		cosmetics.NameFont = ""
+	case types.ShopItemCategoryTitle:
+		cosmetics.Title = ""
+	case types.ShopItemCategoryHat:
+		cosmetics.Hat = ""
+	default:
+		h.errorResponse(w, http.StatusBadRequest, "Invalid category")
+		return
+	}
+
+	if err := h.Store.SetCosmetics(user.ID, cosmetics); err != nil {
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+
+	h.EventHub.EmitLeaderboard()
+	h.jsonResponse(w, http.StatusOK, cosmetics)
 }
 
 // Guest endpoints
@@ -376,6 +521,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		PINHash: pinHash,
 		Admin:   false,
 		Tokens:  0,
+		Coins:   h.StartingCoins,
 	}
 
 	if err := h.Store.AddUser(user, h.StartingTokens); err != nil {
@@ -849,11 +995,17 @@ func (h *Handler) DecidePrediction(w http.ResponseWriter, r *http.Request) {
 	h.EventHub.EmitLeaderboard()
 	h.EventHub.EmitBetsAll()
 
-	// Check win achievements for all users who had bets on this prediction
+	// Check win achievements and award coins for all users who had bets on this prediction
 	bets := h.Store.ListBetsByPrediction(id)
 	for _, bet := range bets {
 		if bet.Status == types.BetStatusWon {
 			h.checkWinAchievements(bet.UserID, bet.WonAmount)
+			// Award coins: 1 coin per 200 tokens won
+			if coinsEarned := bet.WonAmount / 200; coinsEarned > 0 {
+				if err := h.Store.AddCoins(bet.UserID, coinsEarned); err != nil {
+					h.Logger.WithError(err).Error("failed to award bet win coins")
+				}
+			}
 		}
 	}
 
@@ -1006,6 +1158,10 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/my-bets", h.requireAuth(h.GetMyBets))
 	mux.HandleFunc("GET /api/my-achievements", h.requireAuth(h.GetMyAchievements))
 	mux.HandleFunc("POST /api/spin", h.requireAuth(h.Spin))
+	mux.HandleFunc("GET /api/shop", h.ListShopItems)
+	mux.HandleFunc("POST /api/shop/buy/{itemId}", h.requireAuth(h.BuyShopItem))
+	mux.HandleFunc("PUT /api/shop/equip/{itemId}", h.requireAuth(h.EquipItem))
+	mux.HandleFunc("DELETE /api/shop/equip/{category}", h.requireAuth(h.UnequipCategory))
 	mux.HandleFunc("POST /api/bets", h.requireAuth(h.PlaceBet))
 	mux.HandleFunc("PUT /api/bets/{id}/amount", h.requireAuth(h.IncreaseBetAmount))
 

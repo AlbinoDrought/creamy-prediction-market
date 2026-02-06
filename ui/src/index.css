@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Comic+Relief:wght@400;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -43,4 +44,166 @@ body {
 /* Ensure touch targets are accessible */
 button, a, input, select {
   @apply min-h-11;
+}
+
+/* Avatar effects */
+.effect-glow {
+  box-shadow: 0 0 8px 2px rgba(250, 204, 21, 0.6);
+  animation: effectGlow 2s ease-in-out infinite alternate;
+}
+
+.effect-sparkle {
+  position: relative;
+  overflow: visible;
+  animation: sparkleGlow 2s ease-in-out infinite;
+}
+
+.effect-sparkle::before,
+.effect-sparkle::after {
+  content: '✦';
+  position: absolute;
+  font-size: 9px;
+  color: #fff;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.effect-sparkle::before {
+  top: -2px;
+  right: -2px;
+  animation: sparkleA 2.4s ease-in-out infinite;
+}
+
+.effect-sparkle::after {
+  bottom: 0px;
+  left: -3px;
+  animation: sparkleB 2.4s ease-in-out 0.8s infinite;
+}
+
+.effect-fire {
+  position: relative;
+  overflow: visible;
+  animation: effectFire 0.4s ease-in-out infinite alternate;
+}
+
+.effect-fire::before {
+  content: '🔥 🔥';
+  position: absolute;
+  font-size: 14px;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: fireEmoji 0.6s ease-in-out infinite alternate;
+  filter: brightness(1.2);
+}
+
+.effect-rainbow {
+  position: relative;
+  overflow: visible;
+}
+
+.effect-rainbow::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  padding: 3px;
+  background: conic-gradient(#ef4444, #f97316, #facc15, #22c55e, #3b82f6, #7c3aed, #ef4444);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  animation: effectRainbow 2s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes effectGlow {
+  from { box-shadow: 0 0 8px 2px rgba(250, 204, 21, 0.4); }
+  to   { box-shadow: 0 0 16px 6px rgba(250, 204, 21, 0.7); }
+}
+
+@keyframes sparkleGlow {
+  0%, 100% { box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.15); }
+  50%      { box-shadow: 0 0 8px 3px rgba(255, 255, 255, 0.3); }
+}
+
+@keyframes sparkleA {
+  0%   { opacity: 0; transform: translate(2px, 2px) scale(0.3); }
+  15%  { opacity: 1; transform: translate(-1px, -1px) scale(1.1); }
+  30%  { opacity: 0; transform: translate(-3px, 1px) scale(0.5); }
+  100% { opacity: 0; }
+}
+
+@keyframes sparkleB {
+  0%   { opacity: 0; transform: translate(-1px, -2px) scale(0.4); }
+  15%  { opacity: 1; transform: translate(2px, 1px) scale(1.2); }
+  30%  { opacity: 0; transform: translate(1px, 3px) scale(0.3); }
+  100% { opacity: 0; }
+}
+
+@keyframes effectFire {
+  from { box-shadow: 0 -2px 6px 1px rgba(239, 68, 68, 0.3), 0 -4px 12px 0 rgba(249, 115, 22, 0.2); }
+  to   { box-shadow: 0 -4px 10px 2px rgba(239, 68, 68, 0.5), 0 -8px 18px 2px rgba(249, 115, 22, 0.3); }
+}
+
+@keyframes fireEmoji {
+  from { transform: translateX(-50%) scale(0.95); }
+  to   { transform: translateX(-50%) scale(1.05); }
+}
+
+@keyframes effectRainbow {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Name effects */
+.effect-name-glow {
+  text-shadow: 0 0 8px rgba(250, 204, 21, 0.6), 0 0 16px rgba(250, 204, 21, 0.3);
+}
+
+.effect-name-sparkle {
+  background: linear-gradient(90deg, #fff 0%, #facc15 25%, #fff 50%, #a78bfa 75%, #fff 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: nameSparkle 3s linear infinite;
+}
+
+.effect-name-rainbow {
+  background: linear-gradient(90deg, #ef4444, #f97316, #facc15, #22c55e, #3b82f6, #7c3aed, #ef4444);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: nameRainbow 4s linear infinite;
+}
+
+@keyframes nameSparkle {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes nameRainbow {
+  0%   { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Fonts */
+.font-cursive {
+  font-family: cursive;
+}
+
+.font-comic {
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Comic Relief', 'Chalkboard SE', cursive;
+}
+
+/* Global effect banners */
+@keyframes globalBannerFade {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  15%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  85%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
 }

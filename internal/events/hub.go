@@ -8,10 +8,11 @@ import (
 
 // Event types
 const (
-	EventPredictions = "predictions" // Predictions list changed
-	EventLeaderboard = "leaderboard" // Leaderboard changed (tokens changed)
-	EventBets        = "bets"        // User's bets changed (for specific user)
-	EventAchievement = "achievement" // User earned an achievement (for specific user)
+	EventPredictions  = "predictions"   // Predictions list changed
+	EventLeaderboard  = "leaderboard"   // Leaderboard changed (tokens changed)
+	EventBets         = "bets"          // User's bets changed (for specific user)
+	EventAchievement  = "achievement"   // User earned an achievement (for specific user)
+	EventGlobalAction = "global_action" // A user triggered a global cosmetic effect
 )
 
 // Event represents an SSE event
@@ -19,6 +20,8 @@ type Event struct {
 	Type          string `json:"type"`
 	UserID        string `json:"user_id,omitempty"`        // Optional: for user-specific events
 	AchievementID string `json:"achievement_id,omitempty"` // Optional: for achievement events
+	ActionType    string `json:"action_type,omitempty"`    // Optional: for global_action events
+	ActorName     string `json:"actor_name,omitempty"`     // Optional: for global_action events
 }
 
 // Client represents a connected SSE client
@@ -123,4 +126,9 @@ func (h *Hub) EmitBetsAll() {
 // EmitAchievement notifies a specific user that they earned an achievement
 func (h *Hub) EmitAchievement(userID, achievementID string) {
 	h.Emit(Event{Type: EventAchievement, UserID: userID, AchievementID: achievementID})
+}
+
+// EmitGlobalAction broadcasts a global cosmetic effect to all clients
+func (h *Hub) EmitGlobalAction(actorName, actionType string) {
+	h.Emit(Event{Type: EventGlobalAction, ActionType: actionType, ActorName: actorName})
 }

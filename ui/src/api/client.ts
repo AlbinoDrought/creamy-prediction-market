@@ -1,6 +1,8 @@
 import type { User, LeaderboardUser } from '@/types/users'
 import type { Prediction, PredictionWithOdds, Bet } from '@/types/predictions'
 import type { Achievement, UserAchievement } from '@/types/achievements'
+import type { ShopItem } from '@/types/shop'
+import type { UserCosmetics } from '@/types/users'
 
 const API_BASE = '/api'
 
@@ -106,6 +108,23 @@ class ApiClient {
 
   async spin(): Promise<void> {
     return this.request('POST', '/spin')
+  }
+
+  // Shop endpoints
+  async getShopItems(): Promise<ShopItem[]> {
+    return this.request('GET', '/shop')
+  }
+
+  async buyShopItem(itemId: string): Promise<void> {
+    return this.request('POST', `/shop/buy/${itemId}`)
+  }
+
+  async equipItem(itemId: string): Promise<UserCosmetics> {
+    return this.request('PUT', `/shop/equip/${itemId}`)
+  }
+
+  async unequipCategory(category: string): Promise<UserCosmetics> {
+    return this.request('DELETE', `/shop/equip/${category}`)
   }
 
   // Admin endpoints

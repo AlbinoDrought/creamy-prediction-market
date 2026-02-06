@@ -1,44 +1,64 @@
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import { api } from '@/api/client'
+import UserAvatar from '@/components/UserAvatar.vue'
+import UserName from '@/components/UserName.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
+
+const userCosmetics = computed(() => authStore.user?.cosmetics)
+const titleText = computed(() => userCosmetics.value?.title || 'Player')
 
 function goToLeaderboard() {
   router.push({ name: 'leaderboard' })
 }
 
-// Spin state
-const rotation = ref(0)
-const velocity = ref(0)
-let lastX = 0
-let isDragging = false
-let animationId: number | null = null
-let swipeDistance = 0
-let resetTimeout: ReturnType<typeof setTimeout> | null = null
+// Spin state — module-level so it persists across remounts
+const spinState = (() => {
+  // Singleton: reuse across component instances
+  const key = '__avatarSpin'
+  const w = window as Record<string, unknown>
+  if (w[key]) return w[key] as ReturnType<typeof createSpinState>
+  const state = createSpinState()
+  w[key] = state
+  return state
+})()
+
+function createSpinState() {
+  return {
+    rotation: ref(0),
+    velocity: ref(0),
+    lastX: 0,
+    isDragging: false,
+    animationId: null as number | null,
+    swipeDistance: 0,
+    resetTimeout: null as ReturnType<typeof setTimeout> | null,
+  }
+}
+
+const rotation = spinState.rotation
 const SPIN_THRESHOLD = 30
 
 function cancelReset() {
-  if (resetTimeout !== null) {
-    clearTimeout(resetTimeout)
-    resetTimeout = null
+  if (spinState.resetTimeout !== null) {
+    clearTimeout(spinState.resetTimeout)
+    spinState.resetTimeout = null
   }
 }
 
 function scheduleReset() {
   cancelReset()
-  resetTimeout = setTimeout(() => {
-    resetTimeout = null
+  spinState.resetTimeout = setTimeout(() => {
+    spinState.resetTimeout = null
     startResetAnimation()
   }, 3000)
 }
 
 function startResetAnimation() {
   // Normalize rotation to [-180, 180] range so it takes the shortest path
-  let target = 0
   let current = rotation.value % 360
   if (current > 180) current -= 360
   if (current < -180) current += 360
@@ -47,39 +67,39 @@ function startResetAnimation() {
   function tick() {
     rotation.value *= 0.85
     if (Math.abs(rotation.value) > 0.5) {
-      animationId = requestAnimationFrame(tick)
+      spinState.animationId = requestAnimationFrame(tick)
     } else {
       rotation.value = 0
-      animationId = null
+      spinState.animationId = null
     }
   }
-  animationId = requestAnimationFrame(tick)
+  spinState.animationId = requestAnimationFrame(tick)
 }
 
 function onPointerDown(e: PointerEvent) {
-  isDragging = true
-  lastX = e.clientX
-  swipeDistance = 0
-  velocity.value = 0
+  spinState.isDragging = true
+  spinState.lastX = e.clientX
+  spinState.swipeDistance = 0
+  spinState.velocity.value = 0
   stopMomentum()
   cancelReset()
   ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
 }
 
 function onPointerMove(e: PointerEvent) {
-  if (!isDragging) return
-  const dx = e.clientX - lastX
-  lastX = e.clientX
+  if (!spinState.isDragging) return
+  const dx = e.clientX - spinState.lastX
+  spinState.lastX = e.clientX
   const delta = dx * 3
   rotation.value += delta
-  velocity.value = delta
-  swipeDistance += Math.abs(dx)
+  spinState.velocity.value = delta
+  spinState.swipeDistance += Math.abs(dx)
 }
 
 function onPointerUp() {
-  if (!isDragging) return
-  isDragging = false
-  if (swipeDistance >= SPIN_THRESHOLD) {
+  if (!spinState.isDragging) return
+  spinState.isDragging = false
+  if (spinState.swipeDistance >= SPIN_THRESHOLD) {
     api.spin().catch(() => {})
   }
   startMomentum()
@@ -87,31 +107,26 @@ function onPointerUp() {
 
 function startMomentum() {
   function tick() {
-    velocity.value *= 0.95
-    rotation.value += velocity.value
+    spinState.velocity.value *= 0.95
+    rotation.value += spinState.velocity.value
 
-    if (Math.abs(velocity.value) > 0.1) {
-      animationId = requestAnimationFrame(tick)
+    if (Math.abs(spinState.velocity.value) > 0.1) {
+      spinState.animationId = requestAnimationFrame(tick)
     } else {
-      velocity.value = 0
-      animationId = null
+      spinState.velocity.value = 0
+      spinState.animationId = null
       scheduleReset()
     }
   }
-  animationId = requestAnimationFrame(tick)
+  spinState.animationId = requestAnimationFrame(tick)
 }
 
 function stopMomentum() {
-  if (animationId !== null) {
-    cancelAnimationFrame(animationId)
-    animationId = null
+  if (spinState.animationId !== null) {
+    cancelAnimationFrame(spinState.animationId)
+    spinState.animationId = null
   }
 }
-
-onUnmounted(() => {
-  stopMomentum()
-  cancelReset()
-})
 </script>
 
 <template>
@@ -119,28 +134,42 @@ onUnmounted(() => {
     <div class="flex items-center gap-3">
       <div class="avatar-perspective">
         <div
-          class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-bold text-dark select-none touch-none cursor-grab active:cursor-grabbing"
+          class="touch-none cursor-grab active:cursor-grabbing"
           :style="{ transform: `rotateY(${rotation}deg)` }"
           @pointerdown="onPointerDown"
           @pointermove="onPointerMove"
           @pointerup="onPointerUp"
           @pointercancel="onPointerUp"
         >
-          {{ authStore.user?.name.charAt(0).toUpperCase() }}
+          <UserAvatar
+            :name="authStore.user?.name ?? ''"
+            :cosmetics="userCosmetics"
+            :rank-top3="true"
+          />
         </div>
       </div>
       <div>
-        <p class="font-medium">{{ authStore.user?.name }}</p>
-        <p class="text-sm text-gray-400">Player</p>
+        <UserName
+          v-if="authStore.user"
+          :name="authStore.user.name"
+          :cosmetics="userCosmetics"
+        />
+        <p class="text-sm text-gray-400">{{ titleText }}</p>
       </div>
     </div>
-    <button
-      @click="goToLeaderboard"
-      class="bg-dark-light hover:bg-dark-lighter px-4 py-2 rounded-full flex items-center gap-2 transition-colors"
-    >
-      <span class="text-primary font-bold">{{ authStore.user?.tokens ?? 0 }}</span>
-      <span class="text-gray-400 text-sm">tokens</span>
-    </button>
+    <div class="flex items-center gap-2">
+      <div v-if="authStore.user?.coins" class="flex items-center gap-1 px-3 py-2 rounded-full bg-dark-light text-sm">
+        <span>🪙</span>
+        <span class="text-yellow-300 font-bold">{{ authStore.user.coins }}</span>
+      </div>
+      <button
+        @click="goToLeaderboard"
+        class="bg-dark-light hover:bg-dark-lighter px-4 py-2 rounded-full flex items-center gap-2 transition-colors"
+      >
+        <span class="text-primary font-bold">{{ authStore.user?.tokens ?? 0 }}</span>
+        <span class="text-gray-400 text-sm">tokens</span>
+      </button>
+    </div>
   </header>
 </template>
 

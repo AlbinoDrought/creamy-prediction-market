@@ -4,11 +4,14 @@ import { useLeaderboardStore } from '@/stores/leaderboard'
 import { usePredictionsStore } from '@/stores/predictions'
 import { useBetsStore } from '@/stores/bets'
 import { useAchievementsStore } from '@/stores/achievements'
+import { useGlobalEffects } from '@/composables/useGlobalEffects'
 
 interface SSEEvent {
-  type: 'predictions' | 'leaderboard' | 'bets' | 'achievement'
+  type: 'predictions' | 'leaderboard' | 'bets' | 'achievement' | 'global_action'
   user_id?: string
   achievement_id?: string
+  action_type?: string
+  actor_name?: string
 }
 
 export function useSSE() {
@@ -114,6 +117,13 @@ export function useSSE() {
         // User earned an achievement
         if (event.achievement_id) {
           achievementsStore.onAchievementEarned(event.achievement_id)
+        }
+        break
+
+      case 'global_action':
+        if (event.action_type) {
+          const { trigger } = useGlobalEffects()
+          trigger(event.action_type, event.actor_name)
         }
         break
     }

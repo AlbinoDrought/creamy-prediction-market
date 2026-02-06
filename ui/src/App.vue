@@ -3,6 +3,7 @@ import { onMounted, watch, ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useBetsStore } from '@/stores/bets'
 import { useAchievementsStore } from '@/stores/achievements'
+import { useShopStore } from '@/stores/shop'
 import { useSSE } from '@/composables/useSSE'
 import Toast from '@/components/Toast.vue'
 import AchievementUnlock from '@/components/AchievementUnlock.vue'
@@ -10,6 +11,7 @@ import AchievementUnlock from '@/components/AchievementUnlock.vue'
 const authStore = useAuthStore()
 const betsStore = useBetsStore()
 const achievementsStore = useAchievementsStore()
+const shopStore = useShopStore()
 const { connect } = useSSE()
 
 const showWinToast = ref(false)
@@ -47,6 +49,9 @@ function closeAchievementToast() {
 onMounted(async () => {
   // Fetch all achievements (public, needed for displaying icons)
   achievementsStore.fetchAchievements()
+
+  // Fetch shop items (public, needed for shop display)
+  shopStore.fetchShopItems()
 
   // Try to restore session on app load
   if (authStore.token && !authStore.user) {

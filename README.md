@@ -23,7 +23,8 @@ Create a config like this:
   "debug": false,
   "admin_pin": "1234",
   "repo_path": "/path/to/dbfile.json",
-  "starting_tokens": 1000
+  "starting_tokens": 1000,
+  "starting_coins": 5
 }
 ```
 
