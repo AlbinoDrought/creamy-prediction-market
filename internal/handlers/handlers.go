@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -20,6 +21,7 @@ import (
 )
 
 type Handler struct {
+	GracefulCtx    context.Context
 	Store          *repo.Store
 	Logger         *logrus.Logger
 	StartingTokens int64
@@ -946,7 +948,7 @@ func (h *Handler) Events(w http.ResponseWriter, r *http.Request) {
 		f.Flush()
 	}
 
-	// Listen for events or client disconnect
+	// Listen for events or client disconnect or server shutdown
 	for {
 		select {
 		case message, ok := <-client.Send:
@@ -958,6 +960,8 @@ func (h *Handler) Events(w http.ResponseWriter, r *http.Request) {
 				f.Flush()
 			}
 		case <-r.Context().Done():
+			return
+		case <-h.GracefulCtx.Done():
 			return
 		}
 	}

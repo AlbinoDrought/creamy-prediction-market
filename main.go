@@ -181,6 +181,7 @@ func main() {
 	}()
 
 	h := &handlers.Handler{
+		GracefulCtx:    gracefulCtx,
 		Store:          store,
 		Logger:         logger,
 		StartingTokens: config.StartingTokens,
