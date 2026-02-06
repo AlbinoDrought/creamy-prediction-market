@@ -55,7 +55,7 @@ var AllShopItems = []ShopItem{
 	// Avatar Emojis
 	{ID: "avatar_emoji_cool", Category: ShopItemCategoryAvatarEmoji, Name: "Cool", Price: 5, Icon: "😎", Value: "😎"},
 	{ID: "avatar_emoji_cowboy", Category: ShopItemCategoryAvatarEmoji, Name: "Cowboy", Price: 5, Icon: "🤠", Value: "🤠"},
-	// {ID: "avatar_emoji_sad", Category: ShopItemCategoryAvatarEmoji, Name: "Sad", Price: 5, Icon: "😭", Value: "😭"}, // sample: give this when user loses 100 tokens in a bet
+	{ID: "avatar_emoji_sad", Category: ShopItemCategoryAvatarEmoji, Name: "Sad", Price: 5, Icon: "😭", Value: "😭", Locked: true},
 	{ID: "avatar_emoji_ghost", Category: ShopItemCategoryAvatarEmoji, Name: "Ghost", Price: 5, Icon: "👻", Value: "👻"},
 	{ID: "avatar_emoji_robot", Category: ShopItemCategoryAvatarEmoji, Name: "Robot", Price: 5, Icon: "🤖", Value: "🤖"},
 	{ID: "avatar_emoji_fox", Category: ShopItemCategoryAvatarEmoji, Name: "Fox", Price: 10, Icon: "🦊", Value: "🦊"},
@@ -83,6 +83,7 @@ var AllShopItems = []ShopItem{
 	{ID: "name_emoji_crown", Category: ShopItemCategoryNameEmoji, Name: "Crown", Price: 15, Icon: "👑", Value: "👑"},
 	{ID: "name_emoji_rainbow", Category: ShopItemCategoryNameEmoji, Name: "Rainbow", Price: 15, Icon: "🌈", Value: "🌈"},
 	{ID: "name_emoji_sparkles", Category: ShopItemCategoryNameEmoji, Name: "Sparkles", Price: 20, Icon: "✨", Value: "✨"},
+	{ID: "name_emoji_burrito", Category: ShopItemCategoryNameEmoji, Name: "Burrito", Price: 15, Icon: "🌯", Value: "🌯"},
 	{ID: "name_emoji_rocket", Category: ShopItemCategoryNameEmoji, Name: "Rocket", Price: 20, Icon: "🚀", Value: "🚀"},
 	{ID: "name_emoji_trophy", Category: ShopItemCategoryNameEmoji, Name: "Trophy", Price: 25, Icon: "🏆", Value: "🏆"},
 	{ID: "name_emoji_moneybags", Category: ShopItemCategoryNameEmoji, Name: "Moneybags", Price: 30, Icon: "💰", Value: "💰"},

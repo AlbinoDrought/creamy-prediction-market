@@ -26,6 +26,7 @@ const (
 	AchievementFirstWin = "first_win"
 	AchievementLongShot = "long_shot"
 	AchievementBroke    = "broke"
+	AchievementBigLoss  = "big_loss"
 
 	// Special
 	AchievementIncreasedBet = "increased_bet"
@@ -71,6 +72,7 @@ var AllAchievements = []Achievement{
 	{ID: AchievementFirstWin, Name: "Winner", Description: "Win your first bet", Icon: "🏆", CoinReward: 2, ItemReward: "title_winning"},
 	{ID: AchievementLongShot, Name: "Long Shot", Description: "Win a bet with 10:1 or higher odds", Icon: "💸", CoinReward: 5, ItemReward: "avatar_effect_cash"},
 	{ID: AchievementBroke, Name: "Rock Bottom", Description: "Lose all your tokens", Icon: "💩", CoinReward: 1, ItemReward: "hat_poop"},
+	{ID: AchievementBigLoss, Name: "Big Sad", Description: "Lose 100+ tokens in a single bet", Icon: "😭", CoinReward: 1, ItemReward: "avatar_emoji_sad"},
 
 	// Hidden
 	{ID: AchievementSpinner, Name: "Fidget Spinner", Description: "Spin your avatar", Icon: "🌀", CoinReward: 1},

@@ -254,7 +254,13 @@ func (h *Handler) checkWinAchievements(userID string, bet types.Bet) {
 	}
 }
 
-func (h *Handler) checkLossAchievements(userID string) {
+func (h *Handler) checkLossAchievements(userID string, lostAmount int64) {
+	// Big loss: lost 100+ tokens in a single bet
+	if lostAmount >= 100 {
+		h.grantAchievement(userID, types.AchievementBigLoss)
+	}
+
+	// Rock bottom: 0 tokens and no pending bets
 	user, err := h.Store.GetUser(userID)
 	if err != nil {
 		return
@@ -262,7 +268,6 @@ func (h *Handler) checkLossAchievements(userID string) {
 	if user.Tokens > 0 {
 		return
 	}
-	// Make sure they have no pending bets (still have money in play)
 	bets := h.Store.ListBetsByUser(userID)
 	for _, bet := range bets {
 		if bet.Status == types.BetStatusPlaced {
@@ -1049,7 +1054,7 @@ func (h *Handler) DecidePrediction(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if bet.Status == types.BetStatusLost {
-			h.checkLossAchievements(bet.UserID)
+			h.checkLossAchievements(bet.UserID, bet.Amount)
 		}
 	}
 
