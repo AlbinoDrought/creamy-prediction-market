@@ -61,7 +61,9 @@ onMounted(async () => {
 
 // Reconnect SSE when auth state changes to pick up user ID
 watch(() => authStore.token, () => {
-  connect()
+  setTimeout(() => {
+    connect()
+  }, 5000)
 })
 </script>
 
