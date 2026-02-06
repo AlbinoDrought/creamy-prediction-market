@@ -12,10 +12,11 @@ type User struct {
 }
 
 type LeaderboardUser struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Tokens int64  `json:"tokens"`
-	Rank   int    `json:"rank"`
+	ID           string   `json:"id"`
+	Name         string   `json:"name"`
+	Tokens       int64    `json:"tokens"`
+	Rank         int      `json:"rank"`
+	Achievements []string `json:"achievements"`
 }
 
 type TokenChangeCause string

@@ -22,31 +22,34 @@ func NewID() (string, error) {
 }
 
 type Store struct {
-	lock        sync.RWMutex
-	dirty       bool
-	users       map[string]types.User
-	predictions map[string]types.Prediction
-	bets        map[string]types.Bet
-	tokenLog    map[string]types.TokenLog
-	sessions    map[string]string // session token -> user ID
+	lock             sync.RWMutex
+	dirty            bool
+	users            map[string]types.User
+	predictions      map[string]types.Prediction
+	bets             map[string]types.Bet
+	tokenLog         map[string]types.TokenLog
+	sessions         map[string]string // session token -> user ID
+	userAchievements map[string][]types.UserAchievement // user ID -> achievements
 }
 
 func NewStore() *Store {
 	return &Store{
-		users:       make(map[string]types.User),
-		predictions: make(map[string]types.Prediction),
-		bets:        make(map[string]types.Bet),
-		tokenLog:    make(map[string]types.TokenLog),
-		sessions:    make(map[string]string),
+		users:            make(map[string]types.User),
+		predictions:      make(map[string]types.Prediction),
+		bets:             make(map[string]types.Bet),
+		tokenLog:         make(map[string]types.TokenLog),
+		sessions:         make(map[string]string),
+		userAchievements: make(map[string][]types.UserAchievement),
 	}
 }
 
 type storeCopy struct {
-	Users       map[string]types.User
-	Predictions map[string]types.Prediction
-	Bets        map[string]types.Bet
-	TokenLog    map[string]types.TokenLog
-	Sessions    map[string]string
+	Users            map[string]types.User
+	Predictions      map[string]types.Prediction
+	Bets             map[string]types.Bet
+	TokenLog         map[string]types.TokenLog
+	Sessions         map[string]string
+	UserAchievements map[string][]types.UserAchievement
 }
 
 func (s *Store) Save(w io.Writer) error {
@@ -56,11 +59,12 @@ func (s *Store) Save(w io.Writer) error {
 	s.dirty = false
 
 	return json.NewEncoder(w).Encode(&storeCopy{
-		Users:       s.users,
-		Predictions: s.predictions,
-		Bets:        s.bets,
-		TokenLog:    s.tokenLog,
-		Sessions:    s.sessions,
+		Users:            s.users,
+		Predictions:      s.predictions,
+		Bets:             s.bets,
+		TokenLog:         s.tokenLog,
+		Sessions:         s.sessions,
+		UserAchievements: s.userAchievements,
 	})
 }
 
@@ -87,6 +91,9 @@ func (s *Store) Load(r io.Reader) error {
 	if copy.Sessions == nil {
 		copy.Sessions = make(map[string]string)
 	}
+	if copy.UserAchievements == nil {
+		copy.UserAchievements = make(map[string][]types.UserAchievement)
+	}
 
 	s.dirty = false
 	s.users = copy.Users
@@ -94,6 +101,7 @@ func (s *Store) Load(r io.Reader) error {
 	s.bets = copy.Bets
 	s.tokenLog = copy.TokenLog
 	s.sessions = copy.Sessions
+	s.userAchievements = copy.UserAchievements
 
 	return nil
 }
@@ -696,6 +704,12 @@ func (s *Store) listBetsByPredictionLocked(predictionID string) []types.Bet {
 	return bets
 }
 
+func (s *Store) ListBetsByPrediction(predictionID string) []types.Bet {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	return s.listBetsByPredictionLocked(predictionID)
+}
+
 func (s *Store) ListBetsByUser(userID string) []types.Bet {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -716,4 +730,71 @@ func (s *Store) getUserBetOnPredictionLocked(userID, predictionID string) (types
 		}
 	}
 	return types.Bet{}, false
+}
+
+// Achievement methods
+
+func (s *Store) GetUserAchievements(userID string) []types.UserAchievement {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	achievements := s.userAchievements[userID]
+	if achievements == nil {
+		return []types.UserAchievement{}
+	}
+	return achievements
+}
+
+func (s *Store) GetUserAchievementIDs(userID string) []string {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	achievements := s.userAchievements[userID]
+	ids := make([]string, len(achievements))
+	for i, a := range achievements {
+		ids[i] = a.AchievementID
+	}
+	return ids
+}
+
+// GrantAchievement grants an achievement to a user. Returns true if newly granted, false if already had.
+func (s *Store) GrantAchievement(userID, achievementID string, earnedAt string) (bool, error) {
+	// Check if user already has this achievement - readlock only
+	if s.HasAchievement(userID, achievementID) {
+		return false, nil
+	}
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	// Check if user already has this achievement
+	for _, a := range s.userAchievements[userID] {
+		if a.AchievementID == achievementID {
+			return false, nil // already has it
+		}
+	}
+
+	s.dirty = true
+
+	achievement := types.UserAchievement{
+		UserID:        userID,
+		AchievementID: achievementID,
+		EarnedAt:      earnedAt,
+	}
+
+	s.userAchievements[userID] = append(s.userAchievements[userID], achievement)
+	return true, nil
+}
+
+// HasAchievement checks if a user has a specific achievement
+func (s *Store) HasAchievement(userID, achievementID string) bool {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	for _, a := range s.userAchievements[userID] {
+		if a.AchievementID == achievementID {
+			return true
+		}
+	}
+	return false
 }

@@ -1,11 +1,23 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { LeaderboardUser } from '@/types/users'
+import { useAchievementsStore } from '@/stores/achievements'
 
 const props = defineProps<{
   user: LeaderboardUser
   isCurrentUser: boolean
 }>()
+
+const achievementsStore = useAchievementsStore()
+
+const achievementIcons = computed(() => {
+  if (!props.user.achievements || props.user.achievements.length === 0) return []
+  // Get icons for each achievement, limit to 6 most recent
+  return props.user.achievements
+    .slice(-6)
+    .map(id => achievementsStore.getAchievementById(id)?.icon)
+    .filter(Boolean)
+})
 
 const medalEmoji = computed(() => {
   switch (props.user.rank) {
@@ -55,6 +67,9 @@ const rankClass = computed(() => {
         <p class="font-medium" :class="isCurrentUser ? 'text-primary' : 'text-white'">
           {{ user.name }}
           <span v-if="isCurrentUser" class="text-xs text-primary/70 ml-1">(you)</span>
+        </p>
+        <p v-if="achievementIcons.length > 0" class="text-sm mt-0.5">
+          <span v-for="(icon, index) in achievementIcons" :key="index" class="mr-0.5">{{ icon }}</span>
         </p>
       </div>
     </div>

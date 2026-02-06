@@ -3,10 +3,12 @@ import { useAuthStore } from '@/stores/auth'
 import { useLeaderboardStore } from '@/stores/leaderboard'
 import { usePredictionsStore } from '@/stores/predictions'
 import { useBetsStore } from '@/stores/bets'
+import { useAchievementsStore } from '@/stores/achievements'
 
 interface SSEEvent {
-  type: 'predictions' | 'leaderboard' | 'bets'
+  type: 'predictions' | 'leaderboard' | 'bets' | 'achievement'
   user_id?: string
+  achievement_id?: string
 }
 
 export function useSSE() {
@@ -89,6 +91,7 @@ export function useSSE() {
     const betsStore = useBetsStore()
     const authStore = useAuthStore()
     const leaderboardStore = useLeaderboardStore()
+    const achievementsStore = useAchievementsStore()
 
     switch (event.type) {
       case 'predictions':
@@ -105,6 +108,13 @@ export function useSSE() {
       case 'bets':
         // Refresh user's bets
         betsStore.swapBets()
+        break
+
+      case 'achievement':
+        // User earned an achievement
+        if (event.achievement_id) {
+          achievementsStore.onAchievementEarned(event.achievement_id)
+        }
         break
     }
   }

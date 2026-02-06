@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -94,6 +95,141 @@ func (h *Handler) requireAdmin(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// Achievement checking helpers
+
+func newDebouncer(dur time.Duration) func(fn func()) {
+    d := &debouncer{
+        dur: dur,
+    }
+
+    return func(fn func()) {
+        d.reset(fn)
+    }
+}
+
+type debouncer struct {
+    mu    sync.Mutex
+    dur   time.Duration
+    delay *time.Timer
+}
+
+func (d *debouncer) reset(fn func()) {
+    d.mu.Lock()
+    defer d.mu.Unlock()
+
+    if d.delay != nil {
+        d.delay.Stop()
+    }
+
+    d.delay = time.AfterFunc(d.dur, fn)
+}
+
+var grantAchievementLeaderboardDebouncer = newDebouncer(10 * time.Second)
+
+func (h *Handler) grantAchievement(userID, achievementID string) {
+	granted, err := h.Store.GrantAchievement(userID, achievementID, time.Now().Format(time.RFC3339))
+	if err != nil {
+		h.Logger.WithError(err).Error("failed to grant achievement")
+		return
+	}
+	if granted {
+		h.EventHub.EmitAchievement(userID, achievementID)
+		 // Update leaderboard to show new achievement
+		 // Try to avoid emitting a ton of these though: at most once every 10s
+		grantAchievementLeaderboardDebouncer(h.EventHub.EmitLeaderboard)
+	}
+}
+
+func (h *Handler) checkBetAchievements(userID string, betAmount int64) {
+	bets := h.Store.ListBetsByUser(userID)
+
+	// Betting milestones
+	betCount := len(bets)
+	if betCount >= 1 {
+		h.grantAchievement(userID, types.AchievementFirstBet)
+	}
+	if betCount >= 5 {
+		h.grantAchievement(userID, types.AchievementBets5)
+	}
+	if betCount >= 10 {
+		h.grantAchievement(userID, types.AchievementBets10)
+	}
+	if betCount >= 25 {
+		h.grantAchievement(userID, types.AchievementBets25)
+	}
+
+	h.checkBetAmountAchievements(userID, betAmount)
+}
+
+func (h *Handler) checkBetAmountAchievements(userID string, betAmount int64) {
+	// Special bet amounts
+	if betAmount == 69 {
+		h.grantAchievement(userID, types.AchievementBet69)
+	}
+	if betAmount == 420 {
+		h.grantAchievement(userID, types.AchievementBet420)
+	}
+	if betAmount == 1337 {
+		h.grantAchievement(userID, types.AchievementBet1337)
+	}
+	if betAmount == 8008 {
+		h.grantAchievement(userID, types.AchievementBet8008)
+	}
+}
+
+func (h *Handler) checkWinAchievements(userID string, wonAmount int64) {
+	user, err := h.Store.GetUser(userID)
+	if err != nil {
+		return
+	}
+
+	// Token milestones
+	if user.Tokens >= 2000 {
+		h.grantAchievement(userID, types.AchievementTokens2000)
+	}
+	if user.Tokens >= 5000 {
+		h.grantAchievement(userID, types.AchievementTokens5000)
+	}
+	if user.Tokens >= 10000 {
+		h.grantAchievement(userID, types.AchievementTokens10000)
+	}
+
+	// Big wins
+	if wonAmount >= 500 {
+		h.grantAchievement(userID, types.AchievementBigWin500)
+	}
+	if wonAmount >= 1000 {
+		h.grantAchievement(userID, types.AchievementBigWin1000)
+	}
+
+	// Win streaks - count consecutive wins from most recent
+	bets := h.Store.ListBetsByUser(userID)
+	// Sort by created_at descending
+	sort.Slice(bets, func(i, j int) bool {
+		return bets[i].CreatedAt > bets[j].CreatedAt
+	})
+
+	streak := 0
+	for _, bet := range bets {
+		if bet.Status == types.BetStatusWon {
+			streak++
+		} else if bet.Status == types.BetStatusLost {
+			break // streak broken
+		}
+		// Skip placed/voided bets
+	}
+
+	if streak >= 3 {
+		h.grantAchievement(userID, types.AchievementStreak3)
+	}
+	if streak >= 5 {
+		h.grantAchievement(userID, types.AchievementStreak5)
+	}
+	if streak >= 10 {
+		h.grantAchievement(userID, types.AchievementStreak10)
+	}
+}
+
 // Public endpoints
 
 func (h *Handler) ListPredictions(w http.ResponseWriter, r *http.Request) {
@@ -127,9 +263,10 @@ func (h *Handler) ShowLeaderboard(w http.ResponseWriter, r *http.Request) {
 			continue // exclude admins from leaderboard
 		}
 		leaderboard = append(leaderboard, types.LeaderboardUser{
-			ID:     u.ID,
-			Name:   u.Name,
-			Tokens: u.Tokens,
+			ID:           u.ID,
+			Name:         u.Name,
+			Tokens:       u.Tokens,
+			Achievements: h.Store.GetUserAchievementIDs(u.ID),
 		})
 	}
 
@@ -147,6 +284,16 @@ func (h *Handler) ShowLeaderboard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.jsonResponse(w, http.StatusOK, leaderboard)
+}
+
+func (h *Handler) GetAchievements(w http.ResponseWriter, r *http.Request) {
+	h.jsonResponse(w, http.StatusOK, types.AllAchievements)
+}
+
+func (h *Handler) GetMyAchievements(w http.ResponseWriter, r *http.Request) {
+	user, _ := h.getAuthenticatedUser(r)
+	achievements := h.Store.GetUserAchievements(user.ID)
+	h.jsonResponse(w, http.StatusOK, achievements)
 }
 
 // Guest endpoints
@@ -361,6 +508,9 @@ func (h *Handler) PlaceBet(w http.ResponseWriter, r *http.Request) {
 	h.EventHub.EmitLeaderboard()
 	h.EventHub.EmitBets(user.ID)
 
+	// Check achievements
+	h.checkBetAchievements(user.ID, bet.Amount)
+
 	h.jsonResponse(w, http.StatusCreated, bet)
 }
 
@@ -425,6 +575,10 @@ func (h *Handler) IncreaseBetAmount(w http.ResponseWriter, r *http.Request) {
 	h.EventHub.EmitPredictions()
 	h.EventHub.EmitLeaderboard()
 	h.EventHub.EmitBets(user.ID)
+
+	// Check achievements
+	h.grantAchievement(user.ID, types.AchievementIncreasedBet)
+	h.checkBetAmountAchievements(user.ID, req.Amount)
 
 	h.jsonResponse(w, http.StatusOK, bet)
 }
@@ -645,6 +799,14 @@ func (h *Handler) DecidePrediction(w http.ResponseWriter, r *http.Request) {
 	h.EventHub.EmitLeaderboard()
 	h.EventHub.EmitBetsAll()
 
+	// Check win achievements for all users who had bets on this prediction
+	bets := h.Store.ListBetsByPrediction(id)
+	for _, bet := range bets {
+		if bet.Status == types.BetStatusWon {
+			h.checkWinAchievements(bet.UserID, bet.WonAmount)
+		}
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -781,6 +943,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/predictions", h.ListPredictions)
 	mux.HandleFunc("GET /api/predictions/{id}", h.GetPrediction)
 	mux.HandleFunc("GET /api/leaderboard", h.ShowLeaderboard)
+	mux.HandleFunc("GET /api/achievements", h.GetAchievements)
 
 	// Guest
 	mux.HandleFunc("POST /api/register", h.Register)
@@ -789,6 +952,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	// User (authenticated)
 	mux.HandleFunc("GET /api/me", h.requireAuth(h.GetMe))
 	mux.HandleFunc("GET /api/my-bets", h.requireAuth(h.GetMyBets))
+	mux.HandleFunc("GET /api/my-achievements", h.requireAuth(h.GetMyAchievements))
 	mux.HandleFunc("POST /api/bets", h.requireAuth(h.PlaceBet))
 	mux.HandleFunc("PUT /api/bets/{id}/amount", h.requireAuth(h.IncreaseBetAmount))
 

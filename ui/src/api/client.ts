@@ -1,5 +1,6 @@
 import type { User, LeaderboardUser } from '@/types/users'
 import type { Prediction, PredictionWithOdds, Bet } from '@/types/predictions'
+import type { Achievement, UserAchievement } from '@/types/achievements'
 
 const API_BASE = '/api'
 
@@ -93,6 +94,14 @@ class ApiClient {
 
   async getLeaderboard(): Promise<LeaderboardUser[]> {
     return this.request('GET', '/leaderboard')
+  }
+
+  async getAchievements(): Promise<Achievement[]> {
+    return this.request('GET', '/achievements')
+  }
+
+  async getMyAchievements(): Promise<UserAchievement[]> {
+    return this.request('GET', '/my-achievements')
   }
 
   // Admin endpoints

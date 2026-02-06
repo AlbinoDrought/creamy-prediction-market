@@ -4,6 +4,9 @@
 export interface User {
     id: string;
     name: string;
+    /** PINHash is a bcrypt hash of the user's pin. */
+    /** This isn't meant to be secure at all really - we expect the pin to simply be four digits, like 0000. */
+    pin_hash: number[];
     admin: boolean;
     tokens: number;
 }
@@ -13,6 +16,7 @@ export interface LeaderboardUser {
     name: string;
     tokens: number;
     rank: number;
+    achievements: string[];
 }
 
 export interface TokenLog {

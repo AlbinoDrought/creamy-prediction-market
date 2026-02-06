@@ -8,15 +8,17 @@ import (
 
 // Event types
 const (
-	EventPredictions = "predictions" // Predictions list changed
-	EventLeaderboard = "leaderboard" // Leaderboard changed (tokens changed)
-	EventBets        = "bets"        // User's bets changed (for specific user)
+	EventPredictions = "predictions"  // Predictions list changed
+	EventLeaderboard = "leaderboard"  // Leaderboard changed (tokens changed)
+	EventBets        = "bets"         // User's bets changed (for specific user)
+	EventAchievement = "achievement"  // User earned an achievement (for specific user)
 )
 
 // Event represents an SSE event
 type Event struct {
-	Type   string `json:"type"`
-	UserID string `json:"user_id,omitempty"` // Optional: for user-specific events
+	Type          string `json:"type"`
+	UserID        string `json:"user_id,omitempty"`        // Optional: for user-specific events
+	AchievementID string `json:"achievement_id,omitempty"` // Optional: for achievement events
 }
 
 // Client represents a connected SSE client
@@ -116,4 +118,9 @@ func (h *Hub) EmitBets(userID string) {
 
 func (h *Hub) EmitBetsAll() {
 	h.Emit(Event{Type: EventBets})
+}
+
+// EmitAchievement notifies a specific user that they earned an achievement
+func (h *Hub) EmitAchievement(userID, achievementID string) {
+	h.Emit(Event{Type: EventAchievement, UserID: userID, AchievementID: achievementID})
 }
