@@ -14,6 +14,31 @@ export function useSSE() {
   let eventSource: EventSource | null = null
   let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
 
+  function refreshAllStores() {
+    const predictionsStore = usePredictionsStore()
+    const betsStore = useBetsStore()
+    const authStore = useAuthStore()
+    const leaderboardStore = useLeaderboardStore()
+    predictionsStore.swapPredictions()
+    authStore.swapUser()
+    leaderboardStore.swapLeaderboard()
+    betsStore.swapBets()
+  }
+
+  function handleVisibilityChange() {
+    if (document.visibilityState === 'visible') {
+      console.log('[SSE] Page became visible, reconnecting...')
+      // Always reconnect when returning - the connection may have silently died
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout)
+        reconnectTimeout = null
+      }
+      connect()
+      // Refresh all data since we may have missed events while backgrounded
+      refreshAllStores()
+    }
+  }
+
   function connect() {
     if (eventSource) {
       eventSource.close()
@@ -31,14 +56,9 @@ export function useSSE() {
       console.log('[SSE] Connected')
 
       if (reconnectTimeout) {
-        const predictionsStore = usePredictionsStore()
-        const betsStore = useBetsStore()
-        const authStore = useAuthStore()
-        const leaderboardStore = useLeaderboardStore()
-        predictionsStore.swapPredictions()
-        authStore.swapUser()
-        leaderboardStore.swapLeaderboard()
-        betsStore.swapBets()
+        clearTimeout(reconnectTimeout)
+        reconnectTimeout = null
+        refreshAllStores()
       }
     }
 
@@ -103,9 +123,11 @@ export function useSSE() {
 
   onMounted(() => {
     connect()
+    document.addEventListener('visibilitychange', handleVisibilityChange)
   })
 
   onUnmounted(() => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
     disconnect()
   })
 
