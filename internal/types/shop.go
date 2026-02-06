@@ -71,6 +71,7 @@ var AllShopItems = []ShopItem{
 	{ID: "avatar_emoji_crystal", Category: ShopItemCategoryAvatarEmoji, Name: "Crystal Ball", Price: 20, Icon: "🔮", Value: "🔮"},
 	{ID: "avatar_emoji_sparkles", Category: ShopItemCategoryAvatarEmoji, Name: "Sparkles", Price: 25, Icon: "✨", Value: "✨"},
 	{ID: "avatar_emoji_star", Category: ShopItemCategoryAvatarEmoji, Name: "Star", Price: 25, Icon: "🌟", Value: "🌟"},
+	{ID: "avatar_emoji_alien", Category: ShopItemCategoryAvatarEmoji, Name: "Alien", Price: 15, Icon: "👽", Value: "👽"},
 
 	// Name Emojis
 	{ID: "name_emoji_canada", Category: ShopItemCategoryNameEmoji, Name: "Canada", Price: 0, Icon: "🇨🇦", Value: "🇨🇦"},
@@ -99,6 +100,7 @@ var AllShopItems = []ShopItem{
 	{ID: "name_effect_glow", Category: ShopItemCategoryNameEffect, Name: "Glow", Price: 10, Icon: "💡", Value: "glow"},
 	{ID: "name_effect_sparkle", Category: ShopItemCategoryNameEffect, Name: "Sparkle", Price: 15, Icon: "✨", Value: "sparkle"},
 	{ID: "name_effect_rainbow", Category: ShopItemCategoryNameEffect, Name: "Rainbow", Price: 20, Icon: "🌈", Value: "rainbow"},
+	{ID: "name_effect_fire", Category: ShopItemCategoryNameEffect, Name: "Fire", Price: 25, Icon: "🔥", Value: "fire"},
 
 	// Name Bold
 	{ID: "name_bold", Category: ShopItemCategoryNameBold, Name: "Bold Name", Price: 5, Icon: "🅱️", Value: "bold"},

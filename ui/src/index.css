@@ -210,6 +210,21 @@ button, a, input, select {
   animation: nameRainbow 4s linear infinite;
 }
 
+.effect-name-fire {
+  background: linear-gradient(90deg, #ef4444, #f97316, #facc15, #f97316, #ef4444);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: nameFire 2s ease-in-out infinite;
+}
+
+@keyframes nameFire {
+  0%   { background-position: 0% 0; }
+  50%  { background-position: 200% 0; }
+  100% { background-position: 0% 0; }
+}
+
 @keyframes nameSparkle {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
