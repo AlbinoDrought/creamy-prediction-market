@@ -12,6 +12,10 @@ const router = useRouter()
 const userCosmetics = computed(() => authStore.user?.cosmetics)
 const titleText = computed(() => userCosmetics.value?.title || 'Player')
 
+function goToShop() {
+  router.push({ name: 'shop' })
+}
+
 function goToLeaderboard() {
   router.push({ name: 'leaderboard' })
 }
@@ -158,13 +162,17 @@ function stopMomentum() {
       </div>
     </div>
     <div class="flex items-center gap-2">
-      <div v-if="authStore.user?.coins" class="flex items-center gap-1 px-3 py-2 rounded-full bg-dark-light text-sm">
+      <div 
+        v-if="authStore.user?.coins" 
+        @click="goToShop" 
+        class="flex items-center gap-1 px-3 py-2 rounded-full bg-dark-light hover:bg-dark-lighter transition-colors cursor-pointer text-sm"
+      >
         <span>🪙</span>
         <span class="text-yellow-300 font-bold">{{ authStore.user.coins }}</span>
       </div>
       <button
         @click="goToLeaderboard"
-        class="bg-dark-light hover:bg-dark-lighter px-4 py-2 rounded-full flex items-center gap-2 transition-colors"
+        class="bg-dark-light hover:bg-dark-lighter px-4 py-2 rounded-full flex items-center gap-2 transition-colors cursor-pointer"
       >
         <span class="text-primary font-bold">{{ authStore.user?.tokens ?? 0 }}</span>
         <span class="text-gray-400 text-sm">tokens</span>

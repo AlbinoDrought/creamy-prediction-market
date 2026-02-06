@@ -208,6 +208,7 @@ const confirmPreviewCosmetics = computed(() => {
               :class="{
                 'ring-2 ring-primary': isEquipped(item),
                 'opacity-60': !isOwned(item) && !canAfford(item),
+                'cursor-pointer': canAfford(item),
               }"
               @click.prevent="onItemClick(item)"
             >
@@ -222,7 +223,7 @@ const confirmPreviewCosmetics = computed(() => {
                     : isOwned(item)
                     ? 'bg-dark-lighter text-white hover:bg-primary hover:text-dark'
                     : canAfford(item)
-                    ? 'bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30'
+                    ? 'bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30 cursor-pointer'
                     : 'bg-dark-lighter text-gray-500 cursor-not-allowed'
                 "
                 :disabled="isButtonDisabled(item)"
