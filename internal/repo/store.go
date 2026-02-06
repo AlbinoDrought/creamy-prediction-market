@@ -583,6 +583,7 @@ func (s *Store) DecidePrediction(id, choice string) error {
 
 	// update prediction
 	p.Status = types.PredictionStatusDecided
+	p.WinningChoiceID = choice
 	s.predictions[p.ID] = p
 
 	return nil

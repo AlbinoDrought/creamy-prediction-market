@@ -8,6 +8,7 @@ const props = defineProps<{
   selected: boolean
   disabled: boolean
   showOdds: boolean
+  winner?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -33,10 +34,12 @@ const percentage = computed(() => {
     :disabled="disabled"
     class="w-full p-4 rounded-xl border-2 transition-all text-left"
     :class="[
-      selected
-        ? 'border-primary bg-primary/10'
-        : 'border-dark-lighter bg-dark-light hover:border-dark-lighter hover:bg-dark-lighter',
-      disabled && 'opacity-50 cursor-not-allowed'
+      winner
+        ? 'border-success bg-success/10'
+        : selected
+          ? 'border-primary bg-primary/10'
+          : 'border-dark-lighter bg-dark-light hover:border-dark-lighter hover:bg-dark-lighter',
+      disabled && !winner && 'opacity-50 cursor-not-allowed'
     ]"
   >
     <div class="flex items-center justify-between">
@@ -47,9 +50,10 @@ const percentage = computed(() => {
         >
           <div v-if="selected" class="w-3 h-3 rounded-full bg-primary" />
         </div>
-        <span class="font-medium" :class="selected ? 'text-primary' : 'text-white'">
+        <span class="font-medium" :class="winner ? 'text-success' : selected ? 'text-primary' : 'text-white'">
           {{ choice.name }}
         </span>
+        <span v-if="winner" class="ml-2 text-xs font-medium text-success">Winner</span>
       </div>
 
       <div v-if="showOdds && oddsDisplay" class="text-right">

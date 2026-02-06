@@ -296,11 +296,24 @@ function goBack() {
               <div
                 v-for="choice in prediction.choices"
                 :key="choice.id"
-                class="flex items-center justify-between p-3 rounded-lg"
-                :class="choice.id === existingBet.prediction_choice_id ? 'bg-primary/10' : 'bg-dark-light'"
+                class="flex items-center justify-between p-3 rounded-lg border-2"
+                :class="
+                  prediction.winning_choice_id === choice.id
+                    ? 'bg-success/10 border-success'
+                    : choice.id === existingBet.prediction_choice_id
+                      ? 'bg-primary/10 border-transparent'
+                      : 'bg-dark-light border-transparent'
+                "
               >
-                <span :class="choice.id === existingBet.prediction_choice_id ? 'text-primary font-medium' : 'text-white'">
+                <span :class="
+                  prediction.winning_choice_id === choice.id
+                    ? 'text-success font-medium'
+                    : choice.id === existingBet.prediction_choice_id
+                      ? 'text-primary font-medium'
+                      : 'text-white'
+                ">
                   {{ choice.name }}
+                  <span v-if="prediction.winning_choice_id === choice.id" class="text-xs text-success/70 ml-1">Winner</span>
                   <span v-if="choice.id === existingBet.prediction_choice_id" class="text-xs text-primary/70 ml-1">(your pick)</span>
                 </span>
                 <div v-if="showOdds && getOddsForChoice(choice.id)" class="text-right">
@@ -345,6 +358,7 @@ function goBack() {
                 :selected="selectedChoice === choice.id"
                 :disabled="false"
                 :show-odds="showOdds"
+                :winner="prediction.winning_choice_id === choice.id"
                 @select="onChoiceSelect($event)"
               />
             </div>
@@ -365,6 +379,7 @@ function goBack() {
               :selected="false"
               :disabled="true"
               :show-odds="true"
+              :winner="prediction.winning_choice_id === choice.id"
               @select="() => {}"
             />
           </div>

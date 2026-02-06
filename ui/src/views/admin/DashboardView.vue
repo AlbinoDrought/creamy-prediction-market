@@ -162,9 +162,13 @@ function statusClass(status: string) {
           <span
             v-for="choice in prediction.prediction.choices"
             :key="choice.id"
-            class="bg-dark px-2 py-1 rounded text-xs text-gray-300"
+            class="px-2 py-1 rounded text-xs"
+            :class="prediction.prediction.winning_choice_id === choice.id
+              ? 'bg-success/20 text-success font-medium'
+              : 'bg-dark text-gray-300'"
           >
             {{ choice.name }}
+            <template v-if="prediction.prediction.winning_choice_id === choice.id"> (Winner)</template>
           </span>
         </div>
 

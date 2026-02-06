@@ -9,6 +9,7 @@ export interface Prediction {
     status: PredictionStatus;
     closes_at: string;
     choices: PredictionChoice[];
+    winning_choice_id: string;
     odds_visible_before_bet: boolean;
 }
 

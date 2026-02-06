@@ -21,7 +21,7 @@ type Prediction struct {
 	Status      PredictionStatus   `json:"status"`
 	ClosesAt    string             `json:"closes_at"`
 	Choices     []PredictionChoice `json:"choices"`
-	// WinningChoiceID string             `json:"winning_choice_id"`
+	WinningChoiceID string             `json:"winning_choice_id"`
 
 	OddsVisibleBeforeBet bool `json:"odds_visible_before_bet"`
 }
