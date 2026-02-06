@@ -720,6 +720,35 @@ func (h *Handler) UpdatePrediction(w http.ResponseWriter, r *http.Request) {
 	h.jsonResponse(w, http.StatusOK, prediction)
 }
 
+// Sweep closes any open predictions whose ClosesAt time has passed.
+func (h *Handler) Sweep() {
+	now := time.Now()
+	predictions := h.Store.ListPredictions()
+	closed := 0
+	for _, p := range predictions {
+		if p.Status != types.PredictionStatusOpen || p.ClosesAt == "" {
+			continue
+		}
+		closesAt, err := time.Parse(time.RFC3339, p.ClosesAt)
+		if err != nil {
+			h.Logger.WithError(err).WithField("prediction_id", p.ID).Warn("failed to parse closes_at")
+			continue
+		}
+		if now.Before(closesAt) {
+			continue
+		}
+		if err := h.Store.ClosePrediction(p.ID); err != nil {
+			h.Logger.WithError(err).WithField("prediction_id", p.ID).Warn("sweep: failed to close prediction")
+			continue
+		}
+		h.Logger.WithField("prediction_id", p.ID).Info("sweep: closed prediction")
+		closed++
+	}
+	if closed > 0 {
+		h.EventHub.EmitPredictions()
+	}
+}
+
 func (h *Handler) ClosePrediction(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 

@@ -187,6 +187,17 @@ func main() {
 		EventHub:       eventHub,
 	}
 
+	// Sweep expired predictions every minute
+	go func() {
+		// Run once at startup
+		h.Sweep()
+		ticker := time.NewTicker(time.Minute)
+		for {
+			<-ticker.C
+			h.Sweep()
+		}
+	}()
+
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux)
 
