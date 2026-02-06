@@ -21,6 +21,7 @@ const authStore = useAuthStore()
 const selectedChoice = ref<string | null>(null)
 const showIncreaseBetUI = ref(false)
 const betAmount = ref(10)
+const increaseAmount = ref(1)
 const toastMessage = ref('')
 const toastType = ref<'success' | 'error'>('success')
 const showToast = ref(false)
@@ -108,15 +109,8 @@ function onChoiceSelect(choiceId: string) {
 }
 
 function openIncreaseBetUI() {
-  // Cap bet amount to max allowed for increase
-  const maxTokens = (existingBet.value?.amount ?? 0) + (authStore.user?.tokens ?? 0)
-  const minTokens = (existingBet.value?.amount ?? 0) + 1
-  if (betAmount.value > maxTokens) {
-    betAmount.value = maxTokens
-  }
-  if (betAmount.value < minTokens) {
-    betAmount.value = minTokens
-  }
+  // Reset increase amount to minimum (1 token)
+  increaseAmount.value = 1
   showIncreaseBetUI.value = true
 }
 
@@ -193,10 +187,10 @@ async function increaseBet() {
   if (!existingBet.value || !canIncreaseBet.value) return
 
   try {
-    const additionalTokens = betAmount.value - existingBet.value.amount
-    await betsStore.increaseBet(existingBet.value.id, betAmount.value)
+    const newTotal = existingBet.value.amount + increaseAmount.value
+    await betsStore.increaseBet(existingBet.value.id, newTotal)
     toastType.value = 'success'
-    toastMessage.value = `Bet increased by ${additionalTokens} tokens!`
+    toastMessage.value = `Bet increased by ${increaseAmount.value} tokens!`
     showToast.value = true
     // Skip transition on dismiss
     swipeDismissedIncrease.value = true
@@ -211,13 +205,6 @@ async function increaseBet() {
   }
 }
 
-// Initialize bet amount for increasing
-watch(existingBet, (bet) => {
-  if (bet && canIncreaseBet.value) {
-    // Set minimum to current bet + 1
-    betAmount.value = bet.amount + 1
-  }
-}, { immediate: true })
 
 function goBack() {
   router.push({ name: 'home' })
@@ -442,24 +429,23 @@ function goBack() {
         </div>
         <div class="max-w-md mx-auto space-y-3">
           <div class="flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-white">Increase Your Bet</h2>
+            <h2 class="text-sm font-semibold text-white">Add Tokens</h2>
             <span class="text-xs text-gray-400">{{ authStore.user?.tokens ?? 0 }} available</span>
           </div>
           <BetAmountInput
-            v-model="betAmount"
-            :min="existingBet!.amount + 1"
-            :max="existingBet!.amount + (authStore.user?.tokens ?? 0)"
+            v-model="increaseAmount"
+            :max="authStore.user?.tokens ?? 0"
           />
           <p class="text-sm text-gray-400 text-center">
-            Adding <span class="text-primary font-medium">{{ betAmount - existingBet!.amount }}</span> more tokens
+            {{ existingBet!.amount }} → <span class="text-primary font-medium">{{ existingBet!.amount + increaseAmount }}</span> tokens
           </p>
           <button
             @click="increaseBet"
-            :disabled="betsStore.placingBet || betAmount <= existingBet!.amount"
+            :disabled="betsStore.placingBet || increaseAmount < 1"
             class="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-dark font-bold py-4 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
           >
             <LoadingSpinner v-if="betsStore.placingBet" size="sm" />
-            <span v-else>Increase Bet to {{ betAmount }} tokens</span>
+            <span v-else>Add {{ increaseAmount }} {{ increaseAmount === 1 ? 'token' : 'tokens' }}</span>
           </button>
         </div>
       </div>
