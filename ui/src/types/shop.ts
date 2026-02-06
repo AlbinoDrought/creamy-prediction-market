@@ -12,6 +12,8 @@ export interface ShopItem {
     value: string;
     /** Consumable items are used immediately and not added to inventory */
     consumable: boolean;
+    /** Locked items cannot be purchased - they can only be earned */
+    locked: boolean;
 }
 
 export const ShopItemCategory = {

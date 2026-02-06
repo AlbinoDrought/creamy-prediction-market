@@ -28,6 +28,8 @@ type ShopItem struct {
 	Value string `json:"value"`
 	// Consumable items are used immediately and not added to inventory
 	Consumable bool `json:"consumable"`
+	// Locked items cannot be purchased - they can only be earned (e.g. via achievements)
+	Locked bool `json:"locked,omitempty"`
 }
 
 // AllShopItems is the complete catalog of purchasable items
@@ -90,6 +92,7 @@ var AllShopItems = []ShopItem{
 	{ID: "avatar_effect_sparkle", Category: ShopItemCategoryAvatarEffect, Name: "Sparkle", Price: 15, Icon: "✨", Value: "sparkle"},
 	{ID: "avatar_effect_fire", Category: ShopItemCategoryAvatarEffect, Name: "Fire", Price: 20, Icon: "🔥", Value: "fire"},
 	{ID: "avatar_effect_rainbow", Category: ShopItemCategoryAvatarEffect, Name: "Rainbow", Price: 25, Icon: "🌈", Value: "rainbow"},
+	{ID: "avatar_effect_cash", Category: ShopItemCategoryAvatarEffect, Name: "Cash", Price: 0, Icon: "💵", Value: "cash", Locked: true},
 
 	// Name Effects
 	{ID: "name_effect_glow", Category: ShopItemCategoryNameEffect, Name: "Glow", Price: 10, Icon: "💡", Value: "glow"},
@@ -156,6 +159,7 @@ var AllShopItems = []ShopItem{
 	{ID: "title_main_character", Category: ShopItemCategoryTitle, Name: "Main Character", Price: 20, Value: "Main Character"},
 	{ID: "title_touch_grass", Category: ShopItemCategoryTitle, Name: "Needs To Touch Grass", Price: 10, Value: "Needs To Touch Grass"},
 	{ID: "title_lurker", Category: ShopItemCategoryTitle, Name: "Lurker", Price: 5, Value: "Lurker"},
+	{ID: "title_winning", Category: ShopItemCategoryTitle, Name: "Winning", Price: 0, Value: "Winning", Locked: true},
 
 	// Hats
 	{ID: "hat_crown", Category: ShopItemCategoryHat, Name: "Crown", Price: 20, Icon: "👑", Value: "👑"},
@@ -165,6 +169,7 @@ var AllShopItems = []ShopItem{
 	{ID: "hat_thinker", Category: ShopItemCategoryHat, Name: "Thinker", Price: 10, Icon: "💡", Value: "💡"},
 	// {ID: "hat_sun", Category: ShopItemCategoryHat, Name: "Sunhat", Price: 10, Icon: "👒", Value: "👒"}, // doesn't work
 	{ID: "hat_cap", Category: ShopItemCategoryHat, Name: "Cap", Price: 5, Icon: "🧢", Value: "🧢"},
+	{ID: "hat_poop", Category: ShopItemCategoryHat, Name: "Poop", Price: 0, Icon: "💩", Value: "💩", Locked: true},
 
 	// Avatar Items
 	{ID: "avatar_item_surrender", Category: ShopItemCategoryAvatarItem, Name: "Surrender", Price: 1, Icon: "🏳️", Value: "🏳️"},

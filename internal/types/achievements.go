@@ -7,6 +7,7 @@ type Achievement struct {
 	Description string `json:"description"`
 	Icon        string `json:"icon"`
 	CoinReward  int64  `json:"coin_reward"`
+	ItemReward  string `json:"item_reward,omitempty"` // shop item ID granted when earned
 }
 
 // UserAchievement represents an earned achievement

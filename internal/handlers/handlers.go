@@ -143,6 +143,12 @@ func (h *Handler) grantAchievement(userID, achievementID string) {
 				h.Logger.WithError(err).Error("failed to award coins for achievement")
 			}
 		}
+		// Grant item reward if specified
+		if ok && achievement.ItemReward != "" {
+			if err := h.Store.AddOwnedItem(userID, achievement.ItemReward); err != nil && err != repo.ErrItemAlreadyOwned {
+				h.Logger.WithError(err).Error("failed to grant item reward for achievement")
+			}
+		}
 		h.EventHub.EmitAchievement(userID, achievementID)
 		// Update leaderboard to show new achievement
 		// Try to avoid emitting a ton of these though: at most once every 10s
@@ -187,10 +193,18 @@ func (h *Handler) checkBetAmountAchievements(userID string, betAmount int64) {
 	}
 }
 
-func (h *Handler) checkWinAchievements(userID string, wonAmount int64) {
+func (h *Handler) checkWinAchievements(userID string, bet types.Bet) {
 	user, err := h.Store.GetUser(userID)
 	if err != nil {
 		return
+	}
+
+	// First win
+	h.grantAchievement(userID, types.AchievementFirstWin)
+
+	// Long shot: 10:1 or higher odds (payout >= 10x the bet amount)
+	if bet.WonAmount >= bet.Amount*10 {
+		h.grantAchievement(userID, types.AchievementLongShot)
 	}
 
 	// Token milestones
@@ -205,10 +219,10 @@ func (h *Handler) checkWinAchievements(userID string, wonAmount int64) {
 	}
 
 	// Big wins
-	if wonAmount >= 500 {
+	if bet.WonAmount >= 500 {
 		h.grantAchievement(userID, types.AchievementBigWin500)
 	}
-	if wonAmount >= 1000 {
+	if bet.WonAmount >= 1000 {
 		h.grantAchievement(userID, types.AchievementBigWin1000)
 	}
 
@@ -238,6 +252,24 @@ func (h *Handler) checkWinAchievements(userID string, wonAmount int64) {
 	if streak >= 10 {
 		h.grantAchievement(userID, types.AchievementStreak10)
 	}
+}
+
+func (h *Handler) checkLossAchievements(userID string) {
+	user, err := h.Store.GetUser(userID)
+	if err != nil {
+		return
+	}
+	if user.Tokens > 0 {
+		return
+	}
+	// Make sure they have no pending bets (still have money in play)
+	bets := h.Store.ListBetsByUser(userID)
+	for _, bet := range bets {
+		if bet.Status == types.BetStatusPlaced {
+			return
+		}
+	}
+	h.grantAchievement(userID, types.AchievementBroke)
 }
 
 // Public endpoints
@@ -339,6 +371,11 @@ func (h *Handler) BuyShopItem(w http.ResponseWriter, r *http.Request) {
 	item, ok := types.GetShopItemByID(itemID)
 	if !ok {
 		h.errorResponse(w, http.StatusNotFound, "Item not found")
+		return
+	}
+
+	if item.Locked {
+		h.errorResponse(w, http.StatusBadRequest, "This item cannot be purchased")
 		return
 	}
 
@@ -999,17 +1036,20 @@ func (h *Handler) DecidePrediction(w http.ResponseWriter, r *http.Request) {
 	h.EventHub.EmitLeaderboard()
 	h.EventHub.EmitBetsAll()
 
-	// Check win achievements and award coins for all users who had bets on this prediction
+	// Check achievements and award coins for all users who had bets on this prediction
 	bets := h.Store.ListBetsByPrediction(id)
 	for _, bet := range bets {
 		if bet.Status == types.BetStatusWon {
-			h.checkWinAchievements(bet.UserID, bet.WonAmount)
+			h.checkWinAchievements(bet.UserID, bet)
 			// Award coins: 1 coin per 200 tokens won
 			if coinsEarned := bet.WonAmount / 200; coinsEarned > 0 {
 				if err := h.Store.AddCoins(bet.UserID, coinsEarned); err != nil {
 					h.Logger.WithError(err).Error("failed to award bet win coins")
 				}
 			}
+		}
+		if bet.Status == types.BetStatusLost {
+			h.checkLossAchievements(bet.UserID)
 		}
 	}
 

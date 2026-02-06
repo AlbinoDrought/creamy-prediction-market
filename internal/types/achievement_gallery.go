@@ -22,6 +22,11 @@ const (
 	AchievementBigWin500  = "big_win_500"
 	AchievementBigWin1000 = "big_win_1000"
 
+	// Item rewards
+	AchievementFirstWin = "first_win"
+	AchievementLongShot = "long_shot"
+	AchievementBroke    = "broke"
+
 	// Special
 	AchievementIncreasedBet = "increased_bet"
 	AchievementBet69        = "bet_69"
@@ -61,6 +66,11 @@ var AllAchievements = []Achievement{
 	{ID: AchievementBet420, Name: "Blazing", Description: "Bet exactly 420 tokens", Icon: "🌿", CoinReward: 3},
 	{ID: AchievementBet1337, Name: "Elite", Description: "Bet exactly 1337 tokens", Icon: "🤓", CoinReward: 3},
 	{ID: AchievementBet8008, Name: "Classic", Description: "Bet exactly 8008 tokens", Icon: "🔢", CoinReward: 3},
+
+	// Item rewards
+	{ID: AchievementFirstWin, Name: "Winner", Description: "Win your first bet", Icon: "🏆", CoinReward: 2, ItemReward: "title_winning"},
+	{ID: AchievementLongShot, Name: "Long Shot", Description: "Win a bet with 10:1 or higher odds", Icon: "💸", CoinReward: 5, ItemReward: "avatar_effect_cash"},
+	{ID: AchievementBroke, Name: "Rock Bottom", Description: "Lose all your tokens", Icon: "💩", CoinReward: 1, ItemReward: "hat_poop"},
 
 	// Hidden
 	{ID: AchievementSpinner, Name: "Fidget Spinner", Description: "Spin your avatar", Icon: "🌀", CoinReward: 1},

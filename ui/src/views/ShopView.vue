@@ -18,6 +18,7 @@ const buyError = ref<string | null>(null)
 // Confirmation modal state
 const confirmItem = ref<ShopItem | null>(null)
 const confirmMode = ref<'buy' | 'equip'>('buy')
+const shopFilter = ref<'all' | 'owned'>('all')
 
 onMounted(() => {
   shopStore.fetchShopItems()
@@ -79,7 +80,12 @@ function canAfford(item: ShopItem): boolean {
 }
 
 function sortedItems(category: ShopItemCategory): ShopItem[] {
-  const items = shopStore.itemsByCategory.get(category) ?? []
+  let items = shopStore.itemsByCategory.get(category) ?? []
+  if (shopFilter.value === 'owned') {
+    items = items.filter(item => isOwned(item))
+  } else {
+    items = items.filter(item => !item.locked)
+  }
   return [...items].sort((a, b) => a.name.localeCompare(b.name))
 }
 
@@ -172,13 +178,17 @@ function onItemClick(item: ShopItem) {
 
 function buttonLabel(item: ShopItem) {
   if (item.consumable) return `Use · ${item.price} 🪙`
-  if (!isOwned(item)) return `${item.price} 🪙`
+  if (!isOwned(item)) {
+    if (item.locked) return 'Locked'
+    return `${item.price} 🪙`
+  }
   if (isEquipped(item)) return 'Equipped'
   return 'Equip'
 }
 
 function isButtonDisabled(item: ShopItem) {
   if (buyingId.value === item.id) return true
+  if (item.locked && !isOwned(item)) return true
   if (item.consumable) return !canAfford(item)
   if (!isOwned(item)) return !canAfford(item)
   return false
@@ -200,9 +210,27 @@ const confirmPreviewCosmetics = computed(() => {
         {{ buyError }}
       </div>
 
+      <!-- Filter toggle -->
+      <div class="flex gap-2 mb-4">
+        <button
+          class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          :class="shopFilter === 'all' ? 'bg-primary text-dark' : 'bg-dark-light text-gray-300 hover:bg-dark-lighter'"
+          @click="shopFilter = 'all'"
+        >
+          All
+        </button>
+        <button
+          class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          :class="shopFilter === 'owned' ? 'bg-primary text-dark' : 'bg-dark-light text-gray-300 hover:bg-dark-lighter'"
+          @click="shopFilter = 'owned'"
+        >
+          Owned
+        </button>
+      </div>
+
       <!-- Category sections -->
       <div v-for="cat in categoryOrder" :key="cat.key" class="mb-6">
-        <template v-if="shopStore.itemsByCategory.get(cat.key)?.length">
+        <template v-if="sortedItems(cat.key).length">
           <h2 class="text-lg font-bold text-white mb-3">{{ cat.label }}</h2>
           <div class="grid grid-cols-2 gap-3">
             <div
@@ -211,8 +239,8 @@ const confirmPreviewCosmetics = computed(() => {
               class="bg-dark-light rounded-xl p-3 flex flex-col items-center gap-2 relative"
               :class="{
                 'ring-2 ring-primary': isEquipped(item),
-                'opacity-60': !isOwned(item) && !canAfford(item),
-                'cursor-pointer': canAfford(item),
+                'opacity-60': !isOwned(item) && !canAfford(item) && !item.locked,
+                'opacity-40': item.locked && !isOwned(item),
               }"
               @click.prevent="onItemClick(item)"
             >
@@ -226,6 +254,8 @@ const confirmPreviewCosmetics = computed(() => {
                     ? 'bg-primary text-dark'
                     : isOwned(item)
                     ? 'bg-dark-lighter text-white hover:bg-primary hover:text-dark'
+                    : item.locked
+                    ? 'bg-dark-lighter text-gray-500 cursor-not-allowed'
                     : canAfford(item)
                     ? 'bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30 cursor-pointer'
                     : 'bg-dark-lighter text-gray-500 cursor-not-allowed'

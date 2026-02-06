@@ -8,6 +8,7 @@ export interface Achievement {
     description: string;
     icon: string;
     coin_reward: number;
+    item_reward: string;
 }
 
 /** UserAchievement represents an earned achievement */
