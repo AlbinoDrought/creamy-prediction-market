@@ -100,30 +100,30 @@ func (h *Handler) requireAdmin(next http.HandlerFunc) http.HandlerFunc {
 // Achievement checking helpers
 
 func newDebouncer(dur time.Duration) func(fn func()) {
-    d := &debouncer{
-        dur: dur,
-    }
+	d := &debouncer{
+		dur: dur,
+	}
 
-    return func(fn func()) {
-        d.reset(fn)
-    }
+	return func(fn func()) {
+		d.reset(fn)
+	}
 }
 
 type debouncer struct {
-    mu    sync.Mutex
-    dur   time.Duration
-    delay *time.Timer
+	mu    sync.Mutex
+	dur   time.Duration
+	delay *time.Timer
 }
 
 func (d *debouncer) reset(fn func()) {
-    d.mu.Lock()
-    defer d.mu.Unlock()
+	d.mu.Lock()
+	defer d.mu.Unlock()
 
-    if d.delay != nil {
-        d.delay.Stop()
-    }
+	if d.delay != nil {
+		d.delay.Stop()
+	}
 
-    d.delay = time.AfterFunc(d.dur, fn)
+	d.delay = time.AfterFunc(d.dur, fn)
 }
 
 var grantAchievementLeaderboardDebouncer = newDebouncer(10 * time.Second)
@@ -136,8 +136,8 @@ func (h *Handler) grantAchievement(userID, achievementID string) {
 	}
 	if granted {
 		h.EventHub.EmitAchievement(userID, achievementID)
-		 // Update leaderboard to show new achievement
-		 // Try to avoid emitting a ton of these though: at most once every 10s
+		// Update leaderboard to show new achievement
+		// Try to avoid emitting a ton of these though: at most once every 10s
 		grantAchievementLeaderboardDebouncer(h.EventHub.EmitLeaderboard)
 	}
 }
@@ -296,6 +296,25 @@ func (h *Handler) GetMyAchievements(w http.ResponseWriter, r *http.Request) {
 	user, _ := h.getAuthenticatedUser(r)
 	achievements := h.Store.GetUserAchievements(user.ID)
 	h.jsonResponse(w, http.StatusOK, achievements)
+}
+
+func (h *Handler) Spin(w http.ResponseWriter, r *http.Request) {
+	user, _ := h.getAuthenticatedUser(r)
+	spins, err := h.Store.IncrementSpins(user.ID)
+	if err != nil {
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+	if spins >= 1 {
+		h.grantAchievement(user.ID, types.AchievementSpinner)
+	}
+	if spins >= 10 {
+		h.grantAchievement(user.ID, types.AchievementSpinner10)
+	}
+	if spins >= 100 {
+		h.grantAchievement(user.ID, types.AchievementSpinner100)
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // Guest endpoints
@@ -986,6 +1005,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/me", h.requireAuth(h.GetMe))
 	mux.HandleFunc("GET /api/my-bets", h.requireAuth(h.GetMyBets))
 	mux.HandleFunc("GET /api/my-achievements", h.requireAuth(h.GetMyAchievements))
+	mux.HandleFunc("POST /api/spin", h.requireAuth(h.Spin))
 	mux.HandleFunc("POST /api/bets", h.requireAuth(h.PlaceBet))
 	mux.HandleFunc("PUT /api/bets/{id}/amount", h.requireAuth(h.IncreaseBetAmount))
 

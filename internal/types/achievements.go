@@ -28,6 +28,9 @@ const (
 	AchievementBet420       = "bet_420"
 	AchievementBet1337      = "bet_1337"
 	AchievementBet8008      = "bet_8008"
+	AchievementSpinner      = "spinner"
+	AchievementSpinner10    = "spinner_10"
+	AchievementSpinner100   = "spinner_100"
 )
 
 // Achievement represents a possible achievement
@@ -73,6 +76,11 @@ var AllAchievements = []Achievement{
 	{ID: AchievementBet420, Name: "Blazing", Description: "Bet exactly 420 tokens", Icon: "🌿"},
 	{ID: AchievementBet1337, Name: "Elite", Description: "Bet exactly 1337 tokens", Icon: "🤓"},
 	{ID: AchievementBet8008, Name: "Classic", Description: "Bet exactly 8008 tokens", Icon: "🔢"},
+
+	// Hidden
+	{ID: AchievementSpinner, Name: "Fidget Spinner", Description: "Spin your avatar", Icon: "🌀"},
+	{ID: AchievementSpinner10, Name: "Dizzy", Description: "Spin your avatar 10 times", Icon: "😵‍💫"},
+	{ID: AchievementSpinner100, Name: "Centrifuge", Description: "Spin your avatar 100 times", Icon: "🌪️"},
 }
 
 // GetAchievementByID returns an achievement by its ID

@@ -28,7 +28,7 @@ type Store struct {
 	predictions      map[string]types.Prediction
 	bets             map[string]types.Bet
 	tokenLog         map[string]types.TokenLog
-	sessions         map[string]string // session token -> user ID
+	sessions         map[string]string                  // session token -> user ID
 	userAchievements map[string][]types.UserAchievement // user ID -> achievements
 }
 
@@ -282,6 +282,23 @@ func (s *Store) UpdateUserPIN(id string, hash []byte) error {
 	s.users[user.ID] = user
 
 	return nil
+}
+
+func (s *Store) IncrementSpins(id string) (int64, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	user, ok := s.users[id]
+	if !ok {
+		return 0, ErrUserNotFound
+	}
+
+	s.dirty = true
+
+	user.Spins++
+	s.users[user.ID] = user
+
+	return user.Spins, nil
 }
 
 // Session methods

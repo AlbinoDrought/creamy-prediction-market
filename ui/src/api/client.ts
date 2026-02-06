@@ -104,6 +104,10 @@ class ApiClient {
     return this.request('GET', '/my-achievements')
   }
 
+  async spin(): Promise<void> {
+    return this.request('POST', '/spin')
+  }
+
   // Admin endpoints
   async createPrediction(data: {
     name: string

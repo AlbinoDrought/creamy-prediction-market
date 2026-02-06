@@ -8,10 +8,10 @@ import (
 
 // Event types
 const (
-	EventPredictions = "predictions"  // Predictions list changed
-	EventLeaderboard = "leaderboard"  // Leaderboard changed (tokens changed)
-	EventBets        = "bets"         // User's bets changed (for specific user)
-	EventAchievement = "achievement"  // User earned an achievement (for specific user)
+	EventPredictions = "predictions" // Predictions list changed
+	EventLeaderboard = "leaderboard" // Leaderboard changed (tokens changed)
+	EventBets        = "bets"        // User's bets changed (for specific user)
+	EventAchievement = "achievement" // User earned an achievement (for specific user)
 )
 
 // Event represents an SSE event

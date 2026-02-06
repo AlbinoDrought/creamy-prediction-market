@@ -9,6 +9,7 @@ type User struct {
 	Admin   bool   `json:"admin"`
 
 	Tokens int64 `json:"tokens"`
+	Spins  int64 `json:"spins"`
 }
 
 type LeaderboardUser struct {
