@@ -72,7 +72,7 @@ func (h *Handler) getAuthenticatedUser(r *http.Request) (types.User, bool) {
 func (h *Handler) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if _, ok := h.getAuthenticatedUser(r); !ok {
-			h.errorResponse(w, http.StatusUnauthorized, "unauthorized")
+			h.errorResponse(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
 		next(w, r)
@@ -83,11 +83,11 @@ func (h *Handler) requireAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, ok := h.getAuthenticatedUser(r)
 		if !ok {
-			h.errorResponse(w, http.StatusUnauthorized, "unauthorized")
+			h.errorResponse(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
 		if !user.Admin {
-			h.errorResponse(w, http.StatusForbidden, "admin required")
+			h.errorResponse(w, http.StatusForbidden, "Admin required")
 			return
 		}
 		next(w, r)
@@ -111,7 +111,7 @@ func (h *Handler) GetPrediction(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.Store.GetPredictionWithOdds(id)
 	if err != nil {
-		h.errorResponse(w, http.StatusNotFound, "prediction not found")
+		h.errorResponse(w, http.StatusNotFound, "Prediction not found")
 		return
 	}
 
@@ -166,39 +166,39 @@ var regexValidUsername = regexp.MustCompile("^[A-Za-z0-9]+$")
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.errorResponse(w, http.StatusBadRequest, "invalid request body")
+		h.errorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	if req.Name == "" {
-		h.errorResponse(w, http.StatusBadRequest, "name is required")
+		h.errorResponse(w, http.StatusBadRequest, "Name is required")
 		return
 	}
 	if len(req.Name) > 20 {
-		h.errorResponse(w, http.StatusBadRequest, "name must be less than 20 characters")
+		h.errorResponse(w, http.StatusBadRequest, "Name must be less than 20 characters")
 		return
 	}
 	if !regexValidUsername.MatchString(req.Name) {
-		h.errorResponse(w, http.StatusBadRequest, "name must only contain A-Z, a-z, 0-9")
+		h.errorResponse(w, http.StatusBadRequest, "Name must only contain A-Z, a-z, 0-9")
 		return
 	}
 
 	if req.PIN == "" {
-		h.errorResponse(w, http.StatusBadRequest, "pin is required")
+		h.errorResponse(w, http.StatusBadRequest, "Pin is required")
 		return
 	}
 
 	pinHash, err := bcrypt.GenerateFromPassword([]byte(req.PIN), bcrypt.MinCost)
 	if err != nil {
 		h.Logger.WithError(err).Error("failed to hash pin")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
 	userID, err := repo.NewID()
 	if err != nil {
 		h.Logger.WithError(err).Error("failed to generate user ID")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
@@ -212,18 +212,18 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.Store.AddUser(user, h.StartingTokens); err != nil {
 		if err == repo.ErrUserNameTaken {
-			h.errorResponse(w, http.StatusConflict, "name is already taken")
+			h.errorResponse(w, http.StatusConflict, "Name is already taken")
 			return
 		}
 		h.Logger.WithError(err).Error("failed to add user")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
 	sessionToken, err := generateSessionToken()
 	if err != nil {
 		h.Logger.WithError(err).Error("failed to generate session token")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
@@ -248,25 +248,25 @@ type LoginRequest struct {
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.errorResponse(w, http.StatusBadRequest, "invalid request body")
+		h.errorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	user, err := h.Store.GetUserByName(req.Name)
 	if err != nil {
-		h.errorResponse(w, http.StatusUnauthorized, "invalid name or pin")
+		h.errorResponse(w, http.StatusUnauthorized, "Invalid name or pin")
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword(user.PINHash, []byte(req.PIN)); err != nil {
-		h.errorResponse(w, http.StatusUnauthorized, "invalid name or pin")
+		h.errorResponse(w, http.StatusUnauthorized, "Invalid name or pin")
 		return
 	}
 
 	sessionToken, err := generateSessionToken()
 	if err != nil {
 		h.Logger.WithError(err).Error("failed to generate session token")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
@@ -308,14 +308,14 @@ func (h *Handler) PlaceBet(w http.ResponseWriter, r *http.Request) {
 
 	var req PlaceBetRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.errorResponse(w, http.StatusBadRequest, "invalid request body")
+		h.errorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	betID, err := repo.NewID()
 	if err != nil {
 		h.Logger.WithError(err).Error("failed to generate bet ID")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
@@ -331,28 +331,28 @@ func (h *Handler) PlaceBet(w http.ResponseWriter, r *http.Request) {
 
 	err = h.Store.CreateBet(bet)
 	if err == repo.ErrBetAmountMustBePositive {
-		h.errorResponse(w, http.StatusBadRequest, "amount must be positive")
+		h.errorResponse(w, http.StatusBadRequest, "Amount must be positive")
 		return
 	}
 	if err == repo.ErrBetAlreadyExistsForPrediction {
-		h.errorResponse(w, http.StatusConflict, "you already have a bet on this prediction")
+		h.errorResponse(w, http.StatusConflict, "You already have a bet on this prediction")
 		return
 	}
 	if err == repo.ErrPredictionNotOpen {
-		h.errorResponse(w, http.StatusBadRequest, "prediction is not open for betting")
+		h.errorResponse(w, http.StatusBadRequest, "Prediction is not open for betting")
 		return
 	}
 	if err == repo.ErrPredictionChoiceNotFound {
-		h.errorResponse(w, http.StatusBadRequest, "invalid choice")
+		h.errorResponse(w, http.StatusBadRequest, "Invalid choice")
 		return
 	}
 	if err == repo.ErrTokensWouldBeNegative {
-		h.errorResponse(w, http.StatusBadRequest, "insufficient tokens")
+		h.errorResponse(w, http.StatusBadRequest, "Insufficient tokens")
 		return
 	}
 	if err != nil {
 		h.Logger.WithError(err).Error("failed to place bet")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
@@ -374,45 +374,45 @@ func (h *Handler) IncreaseBetAmount(w http.ResponseWriter, r *http.Request) {
 
 	var req IncreaseBetRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.errorResponse(w, http.StatusBadRequest, "invalid request body")
+		h.errorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	bet, err := h.Store.GetBet(betID)
 	if err != nil {
-		h.errorResponse(w, http.StatusNotFound, "bet not found")
+		h.errorResponse(w, http.StatusNotFound, "Bet not found")
 		return
 	}
 
 	if bet.UserID != user.ID {
-		h.errorResponse(w, http.StatusForbidden, "not your bet")
+		h.errorResponse(w, http.StatusForbidden, "Not your bet")
 		return
 	}
 
 	err = h.Store.IncreaseBet(bet.ID, req.Amount)
 	if err == repo.ErrBetNotActive {
-		h.errorResponse(w, http.StatusBadRequest, "bet is not active")
+		h.errorResponse(w, http.StatusBadRequest, "Bet is not active")
 		return
 	}
 	if err == repo.ErrPredictionNotFound {
-		h.errorResponse(w, http.StatusInternalServerError, "prediction not found")
+		h.errorResponse(w, http.StatusInternalServerError, "Prediction not found")
 		return
 	}
 	if err == repo.ErrPredictionNotOpen {
-		h.errorResponse(w, http.StatusInternalServerError, "prediction not found")
+		h.errorResponse(w, http.StatusInternalServerError, "Prediction not found")
 		return
 	}
 	if err == repo.ErrBetAlreadyHigher {
-		h.errorResponse(w, http.StatusConflict, "active bet is already higher than specified amount")
+		h.errorResponse(w, http.StatusConflict, "Active bet is already higher than specified amount")
 		return
 	}
 	if err == repo.ErrTokensWouldBeNegative {
-		h.errorResponse(w, http.StatusBadRequest, "insufficient tokens")
+		h.errorResponse(w, http.StatusBadRequest, "Insufficient tokens")
 		return
 	}
 	if err != nil {
 		h.Logger.WithError(err).Error("failed to updateplace bet")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
@@ -448,24 +448,24 @@ func (h *Handler) ListUsers(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CreatePrediction(w http.ResponseWriter, r *http.Request) {
 	var req CreatePredictionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.errorResponse(w, http.StatusBadRequest, "invalid request body")
+		h.errorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	if req.Name == "" {
-		h.errorResponse(w, http.StatusBadRequest, "name is required")
+		h.errorResponse(w, http.StatusBadRequest, "Name is required")
 		return
 	}
 
 	if len(req.Choices) < 2 {
-		h.errorResponse(w, http.StatusBadRequest, "at least 2 choices required")
+		h.errorResponse(w, http.StatusBadRequest, "At least 2 choices required")
 		return
 	}
 
 	predictionID, err := repo.NewID()
 	if err != nil {
 		h.Logger.WithError(err).Error("failed to generate prediction ID")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
@@ -475,7 +475,7 @@ func (h *Handler) CreatePrediction(w http.ResponseWriter, r *http.Request) {
 			choiceID, err := repo.NewID()
 			if err != nil {
 				h.Logger.WithError(err).Error("failed to generate choice ID")
-				h.errorResponse(w, http.StatusInternalServerError, "internal error")
+				h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 				return
 			}
 			req.Choices[i].ID = choiceID
@@ -495,7 +495,7 @@ func (h *Handler) CreatePrediction(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.Store.PutPrediction(prediction); err != nil {
 		h.Logger.WithError(err).Error("failed to create prediction")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
@@ -517,13 +517,13 @@ func (h *Handler) UpdatePrediction(w http.ResponseWriter, r *http.Request) {
 
 	prediction, err := h.Store.GetPrediction(id)
 	if err != nil {
-		h.errorResponse(w, http.StatusNotFound, "prediction not found")
+		h.errorResponse(w, http.StatusNotFound, "Prediction not found")
 		return
 	}
 
 	var req UpdatePredictionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.errorResponse(w, http.StatusBadRequest, "invalid request body")
+		h.errorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
@@ -552,12 +552,12 @@ func (h *Handler) UpdatePrediction(w http.ResponseWriter, r *http.Request) {
 
 	err = h.Store.PutPrediction(prediction)
 	if err == repo.ErrPredictionNotOpen {
-		h.errorResponse(w, http.StatusBadRequest, "can only update open predictions")
+		h.errorResponse(w, http.StatusBadRequest, "Can only update open predictions")
 		return
 	}
 	if err != nil {
 		h.Logger.WithError(err).Error("failed to update prediction")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
@@ -571,16 +571,16 @@ func (h *Handler) ClosePrediction(w http.ResponseWriter, r *http.Request) {
 
 	err := h.Store.ClosePrediction(id)
 	if err == repo.ErrPredictionNotFound {
-		h.errorResponse(w, http.StatusNotFound, "prediction not found")
+		h.errorResponse(w, http.StatusNotFound, "Prediction not found")
 		return
 	}
 	if err == repo.ErrPredictionNotOpen {
-		h.errorResponse(w, http.StatusBadRequest, "prediction is not open")
+		h.errorResponse(w, http.StatusBadRequest, "Prediction is not open")
 		return
 	}
 	if err != nil {
 		h.Logger.WithError(err).Error("failed to close prediction")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
@@ -594,12 +594,12 @@ func (h *Handler) VoidPrediction(w http.ResponseWriter, r *http.Request) {
 
 	err := h.Store.VoidPrediction(id)
 	if err == repo.ErrPredictionNotFound {
-		h.errorResponse(w, http.StatusNotFound, "prediction not found")
+		h.errorResponse(w, http.StatusNotFound, "Prediction not found")
 		return
 	}
 	if err != nil {
 		h.Logger.WithError(err).Error("failed to void prediction")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
@@ -618,26 +618,26 @@ func (h *Handler) DecidePrediction(w http.ResponseWriter, r *http.Request) {
 
 	var req DecidePredictionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.errorResponse(w, http.StatusBadRequest, "invalid request body")
+		h.errorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	err := h.Store.DecidePrediction(id, req.WinningChoiceID)
 	if err == repo.ErrPredictionNotFound {
-		h.errorResponse(w, http.StatusNotFound, "prediction not found")
+		h.errorResponse(w, http.StatusNotFound, "Prediction not found")
 		return
 	}
 	if err == repo.ErrPredictionNotInClosedState {
-		h.errorResponse(w, http.StatusBadRequest, "prediction must be closed to make decision")
+		h.errorResponse(w, http.StatusBadRequest, "Prediction must be closed to make decision")
 		return
 	}
 	if err == repo.ErrPredictionChoiceNotFound {
-		h.errorResponse(w, http.StatusBadRequest, "invalid winning choice")
+		h.errorResponse(w, http.StatusBadRequest, "Invalid winning choice")
 		return
 	}
 	if err != nil {
 		h.Logger.WithError(err).Error("failed to decide prediction")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
@@ -657,22 +657,22 @@ func (h *Handler) GiftTokens(w http.ResponseWriter, r *http.Request) {
 
 	var req GiftTokensRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.errorResponse(w, http.StatusBadRequest, "invalid request body")
+		h.errorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	err := h.Store.GiftTokens(userID, req.Amount)
 	if err == repo.ErrUserNotFound {
-		h.errorResponse(w, http.StatusNotFound, "user not found")
+		h.errorResponse(w, http.StatusNotFound, "User not found")
 		return
 	}
 	if err == repo.ErrGiftAmountMustBePositive {
-		h.errorResponse(w, http.StatusBadRequest, "amount must be positive")
+		h.errorResponse(w, http.StatusBadRequest, "Amount must be positive")
 		return
 	}
 	if err != nil {
 		h.Logger.WithError(err).Error("failed to gift tokens")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
@@ -690,30 +690,30 @@ func (h *Handler) ResetPIN(w http.ResponseWriter, r *http.Request) {
 
 	var req ResetPINRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.errorResponse(w, http.StatusBadRequest, "invalid request body")
+		h.errorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	if req.NewPIN == "" {
-		h.errorResponse(w, http.StatusBadRequest, "new_pin is required")
+		h.errorResponse(w, http.StatusBadRequest, "New PIN is required")
 		return
 	}
 
 	pinHash, err := bcrypt.GenerateFromPassword([]byte(req.NewPIN), bcrypt.MinCost)
 	if err != nil {
 		h.Logger.WithError(err).Error("failed to hash pin")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
 	err = h.Store.UpdateUserPIN(userID, pinHash)
 	if err == repo.ErrUserNotFound {
-		h.errorResponse(w, http.StatusNotFound, "user not found")
+		h.errorResponse(w, http.StatusNotFound, "User not found")
 		return
 	}
 	if err != nil {
 		h.Logger.WithError(err).Error("failed to update user")
-		h.errorResponse(w, http.StatusInternalServerError, "internal error")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
