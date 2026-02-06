@@ -173,11 +173,44 @@ func (h *Handler) checkBetAchievements(userID string, betAmount int64) {
 	if betCount >= 25 {
 		h.grantAchievement(userID, types.AchievementBets25)
 	}
+	if betCount >= 50 {
+		h.grantAchievement(userID, types.AchievementBets50)
+	}
+	if betCount >= 100 {
+		h.grantAchievement(userID, types.AchievementBets100)
+	}
+
+	// Bet size achievements
+	if betAmount >= 1000 {
+		h.grantAchievement(userID, types.AchievementHighRollerBet)
+	}
+	if betAmount >= 5000 {
+		h.grantAchievement(userID, types.AchievementWhaleBet)
+	}
+
+	// All in: user has 0 tokens remaining after placing a bet
+	user, err := h.Store.GetUser(userID)
+	if err == nil && user.Tokens == 0 {
+		h.grantAchievement(userID, types.AchievementAllIn)
+	}
+
+	// Diversified: bet on 10 different predictions
+	predictionSet := map[string]struct{}{}
+	for _, b := range bets {
+		predictionSet[b.PredictionID] = struct{}{}
+	}
+	if len(predictionSet) >= 10 {
+		h.grantAchievement(userID, types.AchievementDiversified)
+	}
 
 	h.checkBetAmountAchievements(userID, betAmount)
 }
 
 func (h *Handler) checkBetAmountAchievements(userID string, betAmount int64) {
+	// Penny pincher
+	if betAmount == 1 {
+		h.grantAchievement(userID, types.AchievementPennyPincher)
+	}
 	// Special bet amounts
 	if betAmount == 69 {
 		h.grantAchievement(userID, types.AchievementBet69)
@@ -225,19 +258,28 @@ func (h *Handler) checkWinAchievements(userID string, bet types.Bet) {
 	if bet.WonAmount >= 1000 {
 		h.grantAchievement(userID, types.AchievementBigWin1000)
 	}
+	if bet.WonAmount >= 5000 {
+		h.grantAchievement(userID, types.AchievementBigWin5000)
+	}
 
-	// Win streaks - count consecutive wins from most recent
+	// Double up: won at least 2x the bet
+	if bet.WonAmount >= bet.Amount*2 {
+		h.grantAchievement(userID, types.AchievementDoubleUp)
+	}
+
+	// Win streaks, comeback, and total wins
 	bets := h.Store.ListBetsByUser(userID)
 	// Sort by created_at descending
 	sort.Slice(bets, func(i, j int) bool {
 		return bets[i].CreatedAt > bets[j].CreatedAt
 	})
 
+	// Count consecutive wins from most recent
 	streak := 0
-	for _, bet := range bets {
-		if bet.Status == types.BetStatusWon {
+	for _, b := range bets {
+		if b.Status == types.BetStatusWon {
 			streak++
-		} else if bet.Status == types.BetStatusLost {
+		} else if b.Status == types.BetStatusLost {
 			break // streak broken
 		}
 		// Skip placed/voided bets
@@ -252,12 +294,53 @@ func (h *Handler) checkWinAchievements(userID string, bet types.Bet) {
 	if streak >= 10 {
 		h.grantAchievement(userID, types.AchievementStreak10)
 	}
+
+	// Comeback: most recent resolved bet is a win, and the one before it was a loss
+	if len(bets) >= 2 {
+		for _, next := range bets[1:] {
+			if next.Status == types.BetStatusLost {
+				h.grantAchievement(userID, types.AchievementComeback)
+				break
+			} else if next.Status == types.BetStatusWon {
+				break // previous was also a win, no comeback
+			}
+			// skip placed/voided
+		}
+	}
+
+	// Total wins milestone
+	totalWins := 0
+	for _, b := range bets {
+		if b.Status == types.BetStatusWon {
+			totalWins++
+		}
+	}
+	if totalWins >= 10 {
+		h.grantAchievement(userID, types.AchievementWins10)
+	}
 }
 
 func (h *Handler) checkLossAchievements(userID string, lostAmount int64) {
 	// Big loss: lost 100+ tokens in a single bet
 	if lostAmount >= 100 {
 		h.grantAchievement(userID, types.AchievementBigLoss)
+	}
+
+	// Loss streak: count consecutive losses from most recent
+	bets := h.Store.ListBetsByUser(userID)
+	sort.Slice(bets, func(i, j int) bool {
+		return bets[i].CreatedAt > bets[j].CreatedAt
+	})
+	lossStreak := 0
+	for _, b := range bets {
+		if b.Status == types.BetStatusLost {
+			lossStreak++
+		} else if b.Status == types.BetStatusWon {
+			break
+		}
+	}
+	if lossStreak >= 3 {
+		h.grantAchievement(userID, types.AchievementLossStreak3)
 	}
 
 	// Rock bottom: 0 tokens and no pending bets
@@ -268,7 +351,6 @@ func (h *Handler) checkLossAchievements(userID string, lostAmount int64) {
 	if user.Tokens > 0 {
 		return
 	}
-	bets := h.Store.ListBetsByUser(userID)
 	for _, bet := range bets {
 		if bet.Status == types.BetStatusPlaced {
 			return
