@@ -187,7 +187,7 @@ const confirmPreviewCosmetics = computed(() => {
               class="bg-dark-light rounded-xl p-3 flex flex-col items-center gap-2 relative"
               :class="{
                 'ring-2 ring-primary': isEquipped(item),
-                'opacity-60': !isOwned(item) && !canAfford(item) && !item.consumable,
+                'opacity-60': !isOwned(item) && !canAfford(item),
               }"
               @click.prevent="onItemClick(item)"
             >
@@ -201,7 +201,7 @@ const confirmPreviewCosmetics = computed(() => {
                     ? 'bg-primary text-dark'
                     : isOwned(item)
                     ? 'bg-dark-lighter text-white hover:bg-primary hover:text-dark'
-                    : canAfford(item) || item.consumable
+                    : canAfford(item)
                     ? 'bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30'
                     : 'bg-dark-lighter text-gray-500 cursor-not-allowed'
                 "
