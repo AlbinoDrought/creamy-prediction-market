@@ -23,6 +23,8 @@ const fontClass = computed(() => {
       case 'serif': return 'font-serif'
       case 'mono': return 'font-mono'
       case 'cursive': return 'font-cursive'
+      case 'slab': return 'font-slab'
+      case 'tag': return 'font-tag'
       case 'comic': return 'font-comic'
     }
   }

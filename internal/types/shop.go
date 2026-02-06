@@ -106,7 +106,9 @@ var AllShopItems = []ShopItem{
 	{ID: "name_font_serif", Category: ShopItemCategoryNameFont, Name: "Serif", Price: 5, Icon: "🔤", Value: "serif"},
 	{ID: "name_font_mono", Category: ShopItemCategoryNameFont, Name: "Mono", Price: 5, Icon: "💻", Value: "mono"},
 	{ID: "name_font_cursive", Category: ShopItemCategoryNameFont, Name: "Cursive", Price: 10, Icon: "✍️", Value: "cursive"},
+	{ID: "name_font_tag", Category: ShopItemCategoryNameFont, Name: "Tag", Price: 10, Icon: "🖋️", Value: "tag"},
 	{ID: "name_font_comic", Category: ShopItemCategoryNameFont, Name: "Comic Sans", Price: 15, Icon: "🤪", Value: "comic"},
+	{ID: "name_font_slab", Category: ShopItemCategoryNameFont, Name: "Slab", Price: 15, Icon: "🗿", Value: "slab"},
 
 	// Titles - Betting
 	{ID: "title_broke", Category: ShopItemCategoryTitle, Name: "Broke", Price: 1, Value: "Broke"},
