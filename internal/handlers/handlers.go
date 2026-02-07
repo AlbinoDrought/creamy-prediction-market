@@ -365,7 +365,10 @@ func (h *Handler) ListPredictions(w http.ResponseWriter, r *http.Request) {
 	results := h.Store.ListPredictionsWithOdds()
 
 	sort.Slice(results, func(i, j int) bool {
-		return results[i].Prediction.CreatedAt > results[j].Prediction.CreatedAt
+		if results[i].Prediction.CreatedAt != results[j].Prediction.CreatedAt {
+			return results[i].Prediction.CreatedAt > results[j].Prediction.CreatedAt
+		}
+		return results[i].Prediction.ID > results[j].Prediction.ID
 	})
 
 	h.jsonResponse(w, http.StatusOK, results)
