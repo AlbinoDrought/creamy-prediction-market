@@ -15,7 +15,7 @@ const currentRoute = computed(() => route.name)
 </script>
 
 <template>
-  <nav class="fixed bottom-0 left-0 right-0 bg-dark border-t border-dark-lighter px-4 py-2 pb-safe">
+  <nav class="fixed bottom-0 left-0 right-0 z-30 bg-dark border-t border-dark-lighter px-4 py-2 pb-safe">
     <div class="flex justify-around items-center max-w-md mx-auto">
       <router-link
         v-for="item in navItems"
