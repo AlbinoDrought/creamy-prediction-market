@@ -271,7 +271,10 @@ func (h *Handler) checkWinAchievements(userID string, bet types.Bet) {
 	bets := h.Store.ListBetsByUser(userID)
 	// Sort by created_at descending
 	sort.Slice(bets, func(i, j int) bool {
-		return bets[i].CreatedAt > bets[j].CreatedAt
+		if bets[i].CreatedAt != bets[j].CreatedAt {
+			return bets[i].CreatedAt > bets[j].CreatedAt
+		}
+		return bets[i].ID > bets[j].ID
 	})
 
 	// Count consecutive wins from most recent
@@ -329,7 +332,10 @@ func (h *Handler) checkLossAchievements(userID string, lostAmount int64) {
 	// Loss streak: count consecutive losses from most recent
 	bets := h.Store.ListBetsByUser(userID)
 	sort.Slice(bets, func(i, j int) bool {
-		return bets[i].CreatedAt > bets[j].CreatedAt
+		if bets[i].CreatedAt != bets[j].CreatedAt {
+			return bets[i].CreatedAt > bets[j].CreatedAt
+		}
+		return bets[i].ID > bets[j].ID
 	})
 	lossStreak := 0
 	for _, b := range bets {
@@ -487,6 +493,11 @@ func (h *Handler) ClaimMinigameCoins(w http.ResponseWriter, r *http.Request) {
 		h.Logger.WithError(err).Error("failed to increment minigame plays")
 	}
 
+	// Track high score
+	if newHigh, _ := h.Store.UpdateMinigameHighScore(user.ID, req.Score); newHigh {
+		h.EventHub.EmitMinigameLeaderboard()
+	}
+
 	// Achievements
 	h.grantAchievement(user.ID, types.AchievementMinigame)
 	if req.Score >= 500 {
@@ -506,6 +517,37 @@ func (h *Handler) ClaimMinigameCoins(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.jsonResponse(w, http.StatusOK, map[string]int64{"coins_earned": coinsEarned})
+}
+
+type MinigameLeaderboardEntry struct {
+	Name      string              `json:"name"`
+	HighScore int64               `json:"high_score"`
+	Cosmetics types.UserCosmetics `json:"cosmetics"`
+}
+
+func (h *Handler) MinigameLeaderboard(w http.ResponseWriter, r *http.Request) {
+	users := h.Store.ListUsers()
+
+	entries := make([]MinigameLeaderboardEntry, 0)
+	for _, u := range users {
+		if u.Admin || u.MinigameHighScore <= 0 {
+			continue
+		}
+		entries = append(entries, MinigameLeaderboardEntry{
+			Name:      u.Name,
+			HighScore: u.MinigameHighScore,
+			Cosmetics: u.Cosmetics,
+		})
+	}
+
+	sort.Slice(entries, func(i, j int) bool {
+		if entries[i].HighScore != entries[j].HighScore {
+			return entries[i].HighScore > entries[j].HighScore
+		}
+		return entries[i].Name > entries[j].Name
+	})
+
+	h.jsonResponse(w, http.StatusOK, entries)
 }
 
 // Shop endpoints
@@ -796,7 +838,10 @@ func (h *Handler) GetMyBets(w http.ResponseWriter, r *http.Request) {
 
 	// Sort by created_at descending
 	sort.Slice(bets, func(i, j int) bool {
-		return bets[i].CreatedAt > bets[j].CreatedAt
+		if bets[i].CreatedAt != bets[j].CreatedAt {
+			return bets[i].CreatedAt > bets[j].CreatedAt
+		}
+		return bets[i].ID > bets[j].ID
 	})
 
 	h.jsonResponse(w, http.StatusOK, bets)
@@ -1359,6 +1404,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/bets", h.requireAuth(h.PlaceBet))
 	mux.HandleFunc("PUT /api/bets/{id}/amount", h.requireAuth(h.IncreaseBetAmount))
 	mux.HandleFunc("POST /api/minigame/claim", h.requireAuth(h.ClaimMinigameCoins))
+	mux.HandleFunc("GET /api/minigame/leaderboard", h.MinigameLeaderboard)
 
 	// Admin
 	mux.HandleFunc("GET /api/admin/users", h.requireAdmin(h.ListUsers))

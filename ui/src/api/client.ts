@@ -114,6 +114,10 @@ class ApiClient {
     return this.request('POST', '/minigame/claim', { score })
   }
 
+  async getMinigameLeaderboard(): Promise<{ name: string; high_score: number; cosmetics: UserCosmetics }[]> {
+    return this.request('GET', '/minigame/leaderboard')
+  }
+
   // Shop endpoints
   async getShopItems(): Promise<ShopItem[]> {
     return this.request('GET', '/shop')

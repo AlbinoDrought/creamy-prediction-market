@@ -7,11 +7,19 @@ import { useAchievementsStore } from '@/stores/achievements'
 import { useGlobalEffects } from '@/composables/useGlobalEffects'
 
 interface SSEEvent {
-  type: 'predictions' | 'leaderboard' | 'bets' | 'achievement' | 'global_action'
+  type: string
   user_id?: string
   achievement_id?: string
   action_type?: string
   actor_name?: string
+}
+
+type SSEListener = (event: SSEEvent) => void
+const listeners = new Set<SSEListener>()
+
+export function onSSEEvent(listener: SSEListener) {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
 }
 
 export function useSSE() {
@@ -89,6 +97,11 @@ export function useSSE() {
 
   function handleEvent(event: SSEEvent) {
     console.log('[SSE] Event:', event.type)
+
+    // Notify any view-level listeners
+    for (const listener of listeners) {
+      listener(event)
+    }
 
     const predictionsStore = usePredictionsStore()
     const betsStore = useBetsStore()

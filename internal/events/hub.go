@@ -8,11 +8,12 @@ import (
 
 // Event types
 const (
-	EventPredictions  = "predictions"   // Predictions list changed
-	EventLeaderboard  = "leaderboard"   // Leaderboard changed (tokens changed)
-	EventBets         = "bets"          // User's bets changed (for specific user)
-	EventAchievement  = "achievement"   // User earned an achievement (for specific user)
-	EventGlobalAction = "global_action" // A user triggered a global cosmetic effect
+	EventPredictions         = "predictions"          // Predictions list changed
+	EventLeaderboard         = "leaderboard"          // Leaderboard changed (tokens changed)
+	EventBets                = "bets"                 // User's bets changed (for specific user)
+	EventAchievement         = "achievement"          // User earned an achievement (for specific user)
+	EventGlobalAction        = "global_action"        // A user triggered a global cosmetic effect
+	EventMinigameLeaderboard = "minigame_leaderboard" // Minigame high scores changed
 )
 
 // Event represents an SSE event
@@ -126,6 +127,11 @@ func (h *Hub) EmitBetsAll() {
 // EmitAchievement notifies a specific user that they earned an achievement
 func (h *Hub) EmitAchievement(userID, achievementID string) {
 	h.Emit(Event{Type: EventAchievement, UserID: userID, AchievementID: achievementID})
+}
+
+// EmitMinigameLeaderboard notifies all clients that minigame scores changed
+func (h *Hub) EmitMinigameLeaderboard() {
+	h.Emit(Event{Type: EventMinigameLeaderboard})
 }
 
 // EmitGlobalAction broadcasts a global cosmetic effect to all clients

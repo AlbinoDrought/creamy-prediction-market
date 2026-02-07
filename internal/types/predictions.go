@@ -14,13 +14,13 @@ const (
 )
 
 type Prediction struct {
-	ID          string             `json:"id"`
-	CreatedAt   string             `json:"created_at"`
-	Name        string             `json:"name"`
-	Description string             `json:"description"`
-	Status      PredictionStatus   `json:"status"`
-	ClosesAt    string             `json:"closes_at"`
-	Choices     []PredictionChoice `json:"choices"`
+	ID              string             `json:"id"`
+	CreatedAt       string             `json:"created_at"`
+	Name            string             `json:"name"`
+	Description     string             `json:"description"`
+	Status          PredictionStatus   `json:"status"`
+	ClosesAt        string             `json:"closes_at"`
+	Choices         []PredictionChoice `json:"choices"`
 	WinningChoiceID string             `json:"winning_choice_id"`
 
 	OddsVisibleBeforeBet bool `json:"odds_visible_before_bet"`

@@ -8,8 +8,8 @@ type UserCosmetics struct {
 	AvatarEffect string `json:"avatar_effect,omitempty"` // CSS class: glow, sparkle, fire, rainbow
 	NameEffect   string `json:"name_effect,omitempty"`   // CSS class: glow, sparkle, rainbow
 	NameBold     bool   `json:"name_bold,omitempty"`
-	NameFont     string `json:"name_font,omitempty"` // serif, mono, cursive
-	Title        string `json:"title,omitempty"`     // replaces "Player"
+	NameFont     string `json:"name_font,omitempty"`   // serif, mono, cursive
+	Title        string `json:"title,omitempty"`       // replaces "Player"
 	Hat          string `json:"hat,omitempty"`         // emoji displayed above avatar
 	AvatarItem   string `json:"avatar_item,omitempty"` // emoji displayed at bottom-right of avatar
 }
@@ -22,9 +22,10 @@ type User struct {
 	PINHash []byte `json:"pin_hash,omitempty"`
 	Admin   bool   `json:"admin"`
 
-	Tokens        int64 `json:"tokens"`
-	Spins         int64 `json:"spins"`
-	MinigamePlays int64 `json:"minigame_plays"`
+	Tokens            int64 `json:"tokens"`
+	Spins             int64 `json:"spins"`
+	MinigamePlays     int64 `json:"minigame_plays"`
+	MinigameHighScore int64 `json:"minigame_high_score"`
 
 	Coins      int64         `json:"coins"`
 	OwnedItems []string      `json:"owned_items"`

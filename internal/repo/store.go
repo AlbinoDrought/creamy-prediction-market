@@ -318,6 +318,26 @@ func (s *Store) IncrementMinigamePlays(id string) (int64, error) {
 	return user.MinigamePlays, nil
 }
 
+func (s *Store) UpdateMinigameHighScore(id string, score int64) (bool, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	user, ok := s.users[id]
+	if !ok {
+		return false, ErrUserNotFound
+	}
+
+	if score <= user.MinigameHighScore {
+		return false, nil
+	}
+
+	s.dirty = true
+	user.MinigameHighScore = score
+	s.users[user.ID] = user
+
+	return true, nil
+}
+
 // Shop methods
 
 var ErrInsufficientCoins = errors.New("insufficient coins")

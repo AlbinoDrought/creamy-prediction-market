@@ -2,8 +2,12 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { api } from '@/api/client'
+import { onSSEEvent } from '@/composables/useSSE'
+import type { UserCosmetics } from '@/types/users'
 import AppHeader from '@/components/AppHeader.vue'
 import BottomNav from '@/components/BottomNav.vue'
+import UserAvatar from '@/components/UserAvatar.vue'
+import UserName from '@/components/UserName.vue'
 
 const authStore = useAuthStore()
 
@@ -13,6 +17,19 @@ const score = ref(0)
 const highScore = ref(parseInt(localStorage.getItem('minigame_high') || '0', 10))
 const coinsEarned = ref(0)
 const claiming = ref(false)
+
+interface MinigameEntry {
+  name: string
+  high_score: number
+  cosmetics: UserCosmetics
+}
+const leaderboard = ref<MinigameEntry[]>([])
+
+async function fetchLeaderboard() {
+  try {
+    leaderboard.value = await api.getMinigameLeaderboard()
+  } catch { /* ignore */ }
+}
 
 // Game constants
 const GROUND_Y = 0.75 // ground at 75% of canvas height
@@ -160,6 +177,7 @@ async function gameOver() {
     const result = await api.claimMinigameCoins(score.value)
     coinsEarned.value = result.coins_earned
     await authStore.swapUser()
+    fetchLeaderboard()
   } catch {
     coinsEarned.value = 0
   } finally {
@@ -321,11 +339,19 @@ function onKeyDown(e: KeyboardEvent) {
   }
 }
 
+let unsubSSE: (() => void) | null = null
+
 onMounted(() => {
   resizeCanvas()
   drawIdleScreen()
   window.addEventListener('resize', resizeCanvas)
   window.addEventListener('keydown', onKeyDown)
+  fetchLeaderboard()
+  unsubSSE = onSSEEvent((event) => {
+    if (event.type === 'minigame_leaderboard') {
+      fetchLeaderboard()
+    }
+  })
 })
 
 onUnmounted(() => {
@@ -335,6 +361,7 @@ onUnmounted(() => {
   }
   window.removeEventListener('resize', resizeCanvas)
   window.removeEventListener('keydown', onKeyDown)
+  unsubSSE?.()
 })
 </script>
 
@@ -370,6 +397,26 @@ onUnmounted(() => {
       <div class="flex justify-between items-center text-sm text-gray-400">
         <span>High Score: {{ highScore }}</span>
         <span>Coins: 🪙 {{ authStore.user?.coins ?? 0 }}</span>
+      </div>
+
+      <!-- Leaderboard -->
+      <div v-if="leaderboard.length" class="mt-2">
+        <h2 class="text-lg font-bold text-white mb-3">High Scores</h2>
+        <div class="flex flex-col gap-2">
+          <div
+            v-for="(entry, idx) in leaderboard"
+            :key="entry.name"
+            class="flex items-center gap-3 bg-dark-light rounded-xl px-4 py-3"
+            :class="{ 'ring-1 ring-primary': entry.name === authStore.user?.name }"
+          >
+            <span class="text-sm font-bold w-8 shrink-0" :class="idx === 0 ? 'text-yellow-400' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-amber-600' : 'text-gray-500'">
+              {{ idx + 1 }}.
+            </span>
+            <UserAvatar :name="entry.name" :cosmetics="entry.cosmetics" size="sm" />
+            <UserName :name="entry.name" :cosmetics="entry.cosmetics" class="flex-1 truncate" />
+            <span class="text-sm font-mono font-bold text-white">{{ entry.high_score }}</span>
+          </div>
+        </div>
       </div>
     </main>
 

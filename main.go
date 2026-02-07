@@ -229,7 +229,7 @@ func main() {
 	mux.Handle("GET /", http.FileServerFS(sub))
 
 	server := http.Server{
-		Addr:    ":3000",
+		Addr: ":3000",
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			logger.Debugf("%v %v", r.Method, r.URL)
 			mux.ServeHTTP(w, r)
