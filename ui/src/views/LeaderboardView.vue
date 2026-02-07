@@ -43,6 +43,7 @@ const currentUserRank = computed(() => {
             :user="currentUserRank"
             :is-current-user="true"
           />
+          <div class="mt-4 border-t border-dashed border-gray-600"></div>
         </div>
 
         <!-- Top users -->
