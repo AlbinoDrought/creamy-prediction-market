@@ -230,7 +230,10 @@ func main() {
 
 	server := http.Server{
 		Addr:    ":3000",
-		Handler: mux,
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			logger.Debugf("%v %v", r.Method, r.URL)
+			mux.ServeHTTP(w, r)
+		}),
 	}
 	serverCtx, serverCancel := context.WithCancel(ctx)
 	go func() {
