@@ -1175,6 +1175,29 @@ func (h *Handler) ClosePrediction(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (h *Handler) ReopenPrediction(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+
+	err := h.Store.ReopenPrediction(id)
+	if err == repo.ErrPredictionNotFound {
+		h.errorResponse(w, http.StatusNotFound, "Prediction not found")
+		return
+	}
+	if err == repo.ErrPredictionNotInClosedState {
+		h.errorResponse(w, http.StatusBadRequest, "Prediction is not closed")
+		return
+	}
+	if err != nil {
+		h.Logger.WithError(err).Error("failed to reopen prediction")
+		h.errorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+
+	h.EventHub.EmitPredictions()
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *Handler) VoidPrediction(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
@@ -1411,6 +1434,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/admin/predictions", h.requireAdmin(h.CreatePrediction))
 	mux.HandleFunc("PUT /api/admin/predictions/{id}", h.requireAdmin(h.UpdatePrediction))
 	mux.HandleFunc("POST /api/admin/predictions/{id}/close", h.requireAdmin(h.ClosePrediction))
+	mux.HandleFunc("POST /api/admin/predictions/{id}/reopen", h.requireAdmin(h.ReopenPrediction))
 	mux.HandleFunc("POST /api/admin/predictions/{id}/void", h.requireAdmin(h.VoidPrediction))
 	mux.HandleFunc("POST /api/admin/predictions/{id}/decide", h.requireAdmin(h.DecidePrediction))
 	mux.HandleFunc("POST /api/admin/users/{id}/tokens", h.requireAdmin(h.GiftTokens))

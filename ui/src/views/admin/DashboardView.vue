@@ -56,6 +56,23 @@ async function closePrediction(id: string) {
   }
 }
 
+async function reopenPrediction(id: string) {
+  actionLoading.value = id
+  try {
+    await api.reopenPrediction(id)
+    await fetchPredictions()
+    toastType.value = 'success'
+    toastMessage.value = 'Prediction re-opened'
+    showToast.value = true
+  } catch (e) {
+    toastType.value = 'error'
+    toastMessage.value = e instanceof Error ? e.message : 'Failed to re-open prediction'
+    showToast.value = true
+  } finally {
+    actionLoading.value = null
+  }
+}
+
 async function voidPrediction(id: string) {
   if (!confirm('Are you sure you want to void this prediction? All bets will be refunded.')) return
 
@@ -187,6 +204,14 @@ function statusClass(status: string) {
             class="bg-warning/20 hover:bg-warning/30 text-warning px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
           >
             {{ actionLoading === prediction.prediction.id ? 'Closing...' : 'Close Betting' }}
+          </button>
+          <button
+            v-if="prediction.prediction.status === PredictionStatus.Closed"
+            @click="reopenPrediction(prediction.prediction.id)"
+            :disabled="actionLoading === prediction.prediction.id"
+            class="bg-secondary/20 hover:bg-secondary/30 text-secondary-light px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            {{ actionLoading === prediction.prediction.id ? 'Re-opening...' : 'Re-open Betting' }}
           </button>
           <button
             v-if="prediction.prediction.status === PredictionStatus.Closed"

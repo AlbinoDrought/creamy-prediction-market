@@ -159,6 +159,10 @@ class ApiClient {
     return this.request('POST', `/admin/predictions/${id}/close`)
   }
 
+  async reopenPrediction(id: string): Promise<Prediction> {
+    return this.request('POST', `/admin/predictions/${id}/reopen`)
+  }
+
   async decidePrediction(id: string, winningChoiceId: string): Promise<Prediction> {
     return this.request('POST', `/admin/predictions/${id}/decide`, {
       winning_choice_id: winningChoiceId,

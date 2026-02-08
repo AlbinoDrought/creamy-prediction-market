@@ -712,6 +712,27 @@ func (s *Store) ClosePrediction(id string) error {
 	return nil
 }
 
+func (s *Store) ReopenPrediction(id string) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	p, ok := s.predictions[id]
+	if !ok {
+		return ErrPredictionNotFound
+	}
+
+	if p.Status != types.PredictionStatusClosed {
+		return ErrPredictionNotInClosedState
+	}
+
+	s.dirty = true
+
+	p.Status = types.PredictionStatusOpen
+	s.predictions[id] = p
+
+	return nil
+}
+
 // Bet methods
 
 var ErrBetNotFound = errors.New("bet not found")
