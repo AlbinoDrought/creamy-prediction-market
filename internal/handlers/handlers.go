@@ -156,7 +156,7 @@ func (h *Handler) grantAchievement(userID, achievementID string) {
 	}
 }
 
-func (h *Handler) checkBetAchievements(userID string, betAmount int64) {
+func (h *Handler) checkBetAchievements(userID string, bet types.Bet) {
 	bets := h.Store.ListBetsByUser(userID)
 
 	// Betting milestones
@@ -181,10 +181,10 @@ func (h *Handler) checkBetAchievements(userID string, betAmount int64) {
 	}
 
 	// Bet size achievements
-	if betAmount >= 1000 {
+	if bet.Amount >= 1000 {
 		h.grantAchievement(userID, types.AchievementHighRollerBet)
 	}
-	if betAmount >= 5000 {
+	if bet.Amount >= 5000 {
 		h.grantAchievement(userID, types.AchievementWhaleBet)
 	}
 
@@ -192,6 +192,11 @@ func (h *Handler) checkBetAchievements(userID string, betAmount int64) {
 	user, err := h.Store.GetUser(userID)
 	if err == nil && user.Tokens == 0 {
 		h.grantAchievement(userID, types.AchievementAllIn)
+	}
+
+	// Diamond Hands: bet more than half your tokens
+	if err == nil && bet.Amount > user.Tokens {
+		h.grantAchievement(userID, types.AchievementDiamondHands)
 	}
 
 	// Diversified: bet on 10 different predictions
@@ -203,7 +208,112 @@ func (h *Handler) checkBetAchievements(userID string, betAmount int64) {
 		h.grantAchievement(userID, types.AchievementDiversified)
 	}
 
-	h.checkBetAmountAchievements(userID, betAmount)
+	h.checkBetAmountAchievements(userID, bet.Amount)
+
+	// Paper Hands: bet exactly 1 token five times
+	pennyBets := 0
+	for _, b := range bets {
+		if b.Amount == 1 {
+			pennyBets++
+		}
+	}
+	if pennyBets >= 5 {
+		h.grantAchievement(userID, types.AchievementPaperHands)
+	}
+
+	// The Accountant: bet exactly 100 tokens five times
+	hundredBets := 0
+	for _, b := range bets {
+		if b.Amount == 100 {
+			hundredBets++
+		}
+	}
+	if hundredBets >= 5 {
+		h.grantAchievement(userID, types.AchievementAccountant)
+	}
+
+	// Prediction-specific achievements
+	prediction, predErr := h.Store.GetPrediction(bet.PredictionID)
+	if predErr == nil {
+		predNameLower := strings.ToLower(prediction.Name)
+
+		// Gatorade Sommelier: bet on the gatorade question
+		if strings.Contains(predNameLower, "gatorade") {
+			h.grantAchievement(userID, types.AchievementGatorade)
+		}
+
+		// Coin Toss Philosopher: bet 500+ on a coin toss question
+		if strings.Contains(predNameLower, "coin toss") && bet.Amount >= 500 {
+			h.grantAchievement(userID, types.AchievementCoinTossPhilosopher)
+		}
+
+		// Last Second Larry: bet in the final 60 seconds before close
+		if prediction.ClosesAt != "" {
+			closesAt, parseErr := time.Parse(time.RFC3339, prediction.ClosesAt)
+			if parseErr == nil {
+				remaining := time.Until(closesAt)
+				if remaining >= 0 && remaining <= 60*time.Second {
+					h.grantAchievement(userID, types.AchievementLastSecond)
+				}
+			}
+		}
+
+		// Sheep / Contrarian: check if betting with or against the crowd
+		predBets := h.Store.ListBetsByPrediction(bet.PredictionID)
+		choiceTokens := map[string]int64{}
+		otherBettorCount := 0
+		for _, pb := range predBets {
+			if pb.UserID == userID {
+				continue // exclude user's own bet
+			}
+			choiceTokens[pb.PredictionChoiceID] += pb.Amount
+			otherBettorCount++
+		}
+		if otherBettorCount > 0 {
+			var maxTokens, minTokens int64
+			first := true
+			for _, c := range prediction.Choices {
+				t := choiceTokens[c.ID]
+				if first || t > maxTokens {
+					maxTokens = t
+				}
+				if first || t < minTokens {
+					minTokens = t
+				}
+				first = false
+			}
+
+			userChoiceTokens := choiceTokens[bet.PredictionChoiceID]
+			if userChoiceTokens == maxTokens && maxTokens > minTokens {
+				sheepBets, _ := h.Store.IncrementSheepBets(userID)
+				if sheepBets >= 5 {
+					h.grantAchievement(userID, types.AchievementSheep)
+				}
+			}
+			if userChoiceTokens == minTokens && minTokens < maxTokens {
+				contrarianBets, _ := h.Store.IncrementContrarianBets(userID)
+				if contrarianBets >= 5 {
+					h.grantAchievement(userID, types.AchievementContrarian)
+				}
+			}
+		}
+	}
+
+	// Spam Filter: 10 bets within 5 minutes
+	now := time.Now()
+	recentBets := 0
+	for _, b := range bets {
+		t, parseErr := time.Parse(time.RFC3339, b.CreatedAt)
+		if parseErr != nil {
+			continue
+		}
+		if now.Sub(t) <= 5*time.Minute {
+			recentBets++
+		}
+	}
+	if recentBets >= 10 {
+		h.grantAchievement(userID, types.AchievementSpamFilter)
+	}
 }
 
 func (h *Handler) checkBetAmountAchievements(userID string, betAmount int64) {
@@ -321,11 +431,37 @@ func (h *Handler) checkWinAchievements(userID string, bet types.Bet) {
 	if totalWins >= 10 {
 		h.grantAchievement(userID, types.AchievementWins10)
 	}
+
+	// Trust the Process: win after losing 3+ in a row
+	if len(bets) > 1 {
+		consecutiveLosses := 0
+		for _, b := range bets[1:] {
+			if b.Status == types.BetStatusLost {
+				consecutiveLosses++
+			} else if b.Status == types.BetStatusWon {
+				break
+			}
+		}
+		if consecutiveLosses >= 3 {
+			h.grantAchievement(userID, types.AchievementTrustTheProcess)
+		}
+	}
+
+	// Sus: win 5 bets with at least 2x payout
+	doubleUpWins := 0
+	for _, b := range bets {
+		if b.Status == types.BetStatusWon && b.WonAmount >= b.Amount*2 {
+			doubleUpWins++
+		}
+	}
+	if doubleUpWins >= 5 {
+		h.grantAchievement(userID, types.AchievementSus)
+	}
 }
 
-func (h *Handler) checkLossAchievements(userID string, lostAmount int64) {
+func (h *Handler) checkLossAchievements(userID string, bet types.Bet) {
 	// Big loss: lost 100+ tokens in a single bet
-	if lostAmount >= 100 {
+	if bet.Amount >= 100 {
 		h.grantAchievement(userID, types.AchievementBigLoss)
 	}
 
@@ -348,6 +484,18 @@ func (h *Handler) checkLossAchievements(userID string, lostAmount int64) {
 	if lossStreak >= 3 {
 		h.grantAchievement(userID, types.AchievementLossStreak3)
 	}
+	if lossStreak >= 5 {
+		h.grantAchievement(userID, types.AchievementLossStreak5)
+	}
+	if lossStreak >= 10 {
+		h.grantAchievement(userID, types.AchievementLossStreak10)
+	}
+
+	// Jinx: lost a bet within 5 minutes of placing it
+	betTime, parseErr := time.Parse(time.RFC3339, bet.CreatedAt)
+	if parseErr == nil && time.Since(betTime) <= 5*time.Minute {
+		h.grantAchievement(userID, types.AchievementJinx)
+	}
 
 	// Rock bottom: 0 tokens and no pending bets
 	user, err := h.Store.GetUser(userID)
@@ -357,12 +505,49 @@ func (h *Handler) checkLossAchievements(userID string, lostAmount int64) {
 	if user.Tokens > 0 {
 		return
 	}
-	for _, bet := range bets {
-		if bet.Status == types.BetStatusPlaced {
+	for _, b := range bets {
+		if b.Status == types.BetStatusPlaced {
 			return
 		}
 	}
 	h.grantAchievement(userID, types.AchievementBroke)
+
+	// Speed Run: went broke within first 5 bets
+	if len(bets) <= 5 {
+		h.grantAchievement(userID, types.AchievementSpeedRun)
+	}
+}
+
+func (h *Handler) checkPostDecisionAchievements(userID string) {
+	user, err := h.Store.GetUser(userID)
+	if err != nil {
+		return
+	}
+
+	bets := h.Store.ListBetsByUser(userID)
+
+	resolvedCount := 0
+	totalWins := 0
+	predictionSet := map[string]struct{}{}
+	for _, b := range bets {
+		if b.Status == types.BetStatusWon || b.Status == types.BetStatusLost {
+			resolvedCount++
+			predictionSet[b.PredictionID] = struct{}{}
+		}
+		if b.Status == types.BetStatusWon {
+			totalWins++
+		}
+	}
+
+	// Down Bad: fewer tokens than starting after 20 resolved bets
+	if resolvedCount >= 20 && user.Tokens < h.StartingTokens {
+		h.grantAchievement(userID, types.AchievementDownBad)
+	}
+
+	// Participation Trophy: 20+ predictions resolved but fewer than 5 wins
+	if len(predictionSet) >= 20 && totalWins < 5 {
+		h.grantAchievement(userID, types.AchievementParticipationTrophy)
+	}
 }
 
 // Public endpoints
@@ -912,7 +1097,7 @@ func (h *Handler) PlaceBet(w http.ResponseWriter, r *http.Request) {
 	h.EventHub.EmitBets(user.ID)
 
 	// Check achievements
-	h.checkBetAchievements(user.ID, bet.Amount)
+	h.checkBetAchievements(user.ID, bet)
 
 	h.jsonResponse(w, http.StatusCreated, bet)
 }
@@ -1267,7 +1452,10 @@ func (h *Handler) DecidePrediction(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if bet.Status == types.BetStatusLost {
-			h.checkLossAchievements(bet.UserID, bet.Amount)
+			h.checkLossAchievements(bet.UserID, bet)
+		}
+		if bet.Status == types.BetStatusWon || bet.Status == types.BetStatusLost {
+			h.checkPostDecisionAchievements(bet.UserID)
 		}
 	}
 

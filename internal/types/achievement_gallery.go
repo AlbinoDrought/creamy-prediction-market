@@ -67,6 +67,33 @@ const (
 	AchievementMinigame2000      = "minigame_2000"
 	AchievementMinigamePlays10   = "minigame_plays_10"
 	AchievementMinigamePlays50   = "minigame_plays_50"
+
+	// Extended loss streaks
+	AchievementLossStreak5  = "loss_streak_5"
+	AchievementLossStreak10 = "loss_streak_10"
+
+	// Degenerate energy
+	AchievementSpeedRun     = "speed_run"
+	AchievementPaperHands   = "paper_hands"
+	AchievementDiamondHands = "diamond_hands"
+
+	// Game day
+	AchievementJinx                = "jinx"
+	AchievementGatorade            = "gatorade"
+	AchievementCoinTossPhilosopher = "coin_toss_big"
+
+	// Social
+	AchievementSheep      = "sheep"
+	AchievementContrarian = "contrarian"
+	AchievementLastSecond = "last_second"
+	AchievementSpamFilter = "spam_filter"
+
+	// Post-decision
+	AchievementDownBad             = "down_bad"
+	AchievementTrustTheProcess     = "trust_the_process"
+	AchievementAccountant          = "accountant"
+	AchievementSus                 = "sus"
+	AchievementParticipationTrophy = "participation_trophy"
 )
 
 // AllAchievements is the complete list of available achievements
@@ -138,6 +165,33 @@ var AllAchievements = []Achievement{
 	{ID: AchievementMinigame2000, Name: "Extinction Event", Description: "Score 2000+ in the minigame", Icon: "☄️", CoinReward: 25, ItemReward: "title_dino_whisperer"},
 	{ID: AchievementMinigamePlays10, Name: "Addicted", Description: "Play the minigame 10 times", Icon: "🔁", CoinReward: 3, ItemReward: "name_emoji_dino"},
 	{ID: AchievementMinigamePlays50, Name: "Jurassic Park", Description: "Play the minigame 50 times", Icon: "🏞️", CoinReward: 10, ItemReward: "hat_dino"},
+
+	// Extended loss streaks
+	{ID: AchievementLossStreak5, Name: "Dumpster Fire", Description: "Lose 5 bets in a row", Icon: "🗑️", CoinReward: 5},
+	{ID: AchievementLossStreak10, Name: "Cursed", Description: "Lose 10 bets in a row", Icon: "🪦", CoinReward: 10, ItemReward: "hat_gravestone"},
+
+	// Degenerate energy
+	{ID: AchievementSpeedRun, Name: "Speed Run", Description: "Go broke within your first 5 bets", Icon: "💨", CoinReward: 3},
+	{ID: AchievementPaperHands, Name: "Paper Hands", Description: "Bet exactly 1 token five times", Icon: "🧻", CoinReward: 3},
+	{ID: AchievementDiamondHands, Name: "Diamond Hands", Description: "Bet more than half your tokens at once", Icon: "💎", CoinReward: 5},
+
+	// Game day
+	{ID: AchievementJinx, Name: "Jinx", Description: "Lose a bet within 5 minutes of placing it", Icon: "🤡", CoinReward: 3},
+	{ID: AchievementGatorade, Name: "Gatorade Sommelier", Description: "Bet on the Gatorade shower color", Icon: "🍷", CoinReward: 2},
+	{ID: AchievementCoinTossPhilosopher, Name: "Coin Toss Philosopher", Description: "Bet 500+ tokens on a coin toss", Icon: "🪙", CoinReward: 3},
+
+	// Social
+	{ID: AchievementSheep, Name: "Sheep", Description: "Place 5 bets on the majority side", Icon: "🐑", CoinReward: 3},
+	{ID: AchievementContrarian, Name: "Contrarian", Description: "Place 5 bets against the majority", Icon: "🙃", CoinReward: 5},
+	{ID: AchievementLastSecond, Name: "Last Second Larry", Description: "Place a bet in the final 60 seconds", Icon: "⏰", CoinReward: 3},
+	{ID: AchievementSpamFilter, Name: "Spam Filter", Description: "Place 10 bets within 5 minutes", Icon: "📬", CoinReward: 5},
+
+	// Post-decision
+	{ID: AchievementDownBad, Name: "Down Bad", Description: "Have fewer tokens than you started with after 20 bets", Icon: "📉", CoinReward: 3},
+	{ID: AchievementTrustTheProcess, Name: "Trust the Process", Description: "Win a bet after losing 3 in a row", Icon: "🧘", CoinReward: 5},
+	{ID: AchievementAccountant, Name: "The Accountant", Description: "Bet exactly 100 tokens five times", Icon: "🧮", CoinReward: 3},
+	{ID: AchievementSus, Name: "Sus", Description: "Win 5 bets with at least 2x payout", Icon: "👀", CoinReward: 10},
+	{ID: AchievementParticipationTrophy, Name: "Participation Trophy", Description: "Bet on 20+ predictions but win fewer than 5", Icon: "🏅", CoinReward: 3, ItemReward: "title_participation"},
 }
 
 // GetAchievementByID returns an achievement by its ID

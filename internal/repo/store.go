@@ -318,6 +318,38 @@ func (s *Store) IncrementMinigamePlays(id string) (int64, error) {
 	return user.MinigamePlays, nil
 }
 
+func (s *Store) IncrementSheepBets(id string) (int64, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	user, ok := s.users[id]
+	if !ok {
+		return 0, ErrUserNotFound
+	}
+
+	s.dirty = true
+	user.SheepBets++
+	s.users[user.ID] = user
+
+	return user.SheepBets, nil
+}
+
+func (s *Store) IncrementContrarianBets(id string) (int64, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	user, ok := s.users[id]
+	if !ok {
+		return 0, ErrUserNotFound
+	}
+
+	s.dirty = true
+	user.ContrarianBets++
+	s.users[user.ID] = user
+
+	return user.ContrarianBets, nil
+}
+
 func (s *Store) UpdateMinigameHighScore(id string, score int64) (bool, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()

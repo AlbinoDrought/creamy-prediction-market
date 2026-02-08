@@ -168,6 +168,7 @@ var AllShopItems = []ShopItem{
 	{ID: "title_lurker", Category: ShopItemCategoryTitle, Name: "Lurker", Price: 5, Value: "Lurker"},
 	{ID: "title_winning", Category: ShopItemCategoryTitle, Name: "Winning", Price: 0, Value: "Winning", Locked: true},
 	{ID: "title_dino_whisperer", Category: ShopItemCategoryTitle, Name: "Dino Whisperer", Price: 0, Value: "Dino Whisperer", Locked: true},
+	{ID: "title_participation", Category: ShopItemCategoryTitle, Name: "Participation Trophy", Price: 0, Value: "Participation Trophy", Locked: true},
 
 	// Titles - PTO & Work-Life Balance
 	{ID: "title_pto_aficionado", Category: ShopItemCategoryTitle, Name: "PTO Aficionado", Price: 10, Value: "PTO Aficionado"},
@@ -199,6 +200,7 @@ var AllShopItems = []ShopItem{
 	{ID: "hat_cap", Category: ShopItemCategoryHat, Name: "Cap", Price: 5, Icon: "🧢", Value: "🧢"},
 	{ID: "hat_poop", Category: ShopItemCategoryHat, Name: "Poop", Price: 0, Icon: "💩", Value: "💩", Locked: true},
 	{ID: "hat_dino", Category: ShopItemCategoryHat, Name: "Dino", Price: 0, Icon: "🦕", Value: "🦕", Locked: true},
+	{ID: "hat_gravestone", Category: ShopItemCategoryHat, Name: "Gravestone", Price: 0, Icon: "🪦", Value: "🪦", Locked: true},
 
 	// Avatar Items
 	{ID: "avatar_item_surrender", Category: ShopItemCategoryAvatarItem, Name: "Surrender", Price: 1, Icon: "🏳️", Value: "🏳️"},

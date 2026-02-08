@@ -26,6 +26,8 @@ type User struct {
 	Spins             int64 `json:"spins"`
 	MinigamePlays     int64 `json:"minigame_plays"`
 	MinigameHighScore int64 `json:"minigame_high_score"`
+	SheepBets         int64 `json:"sheep_bets,omitempty"`
+	ContrarianBets    int64 `json:"contrarian_bets,omitempty"`
 
 	Coins      int64         `json:"coins"`
 	OwnedItems []string      `json:"owned_items"`
