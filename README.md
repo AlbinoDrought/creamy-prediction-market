@@ -4,6 +4,7 @@
     <img src="./.readme/logo.png" alt="Creamy Prediction Market Cat Logo">
     <p align="center">The creamiest selfhosted prediction market</p>
     <p align="center">
+        <a href="https://albinodrought.github.io/creamy-prediction-market/"><img alt="Website" src="https://img.shields.io/website?url=https%3A%2F%2Falbinodrought.github.io%2Fcreamy-prediction-market%2F&label=website"></a>
         <a href="https://github.com/AlbinoDrought/creamy-prediction-market/blob/master/LICENSE"><img alt="AGPL-3.0 License" src="https://img.shields.io/github/license/AlbinoDrought/creamy-prediction-market"></a>
     </p>
 </p>
