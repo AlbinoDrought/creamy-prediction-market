@@ -208,7 +208,7 @@ async function increaseBet() {
 
 
 function goBack() {
-  router.push({ name: 'home' })
+  router.back()
 }
 </script>
 

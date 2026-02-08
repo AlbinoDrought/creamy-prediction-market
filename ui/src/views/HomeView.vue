@@ -30,7 +30,7 @@ const sections = [
     <AppHeader />
 
     <main class="p-4 space-y-6">
-      <div v-if="predictionsStore.loading" class="flex justify-center py-12">
+      <div v-if="predictionsStore.loading && predictionsStore.predictions.length === 0" class="flex justify-center py-12">
         <LoadingSpinner size="lg" />
       </div>
 
