@@ -79,6 +79,7 @@ const timeRemaining = computed(() => {
   <router-link
     :to="{ name: 'prediction', params: { id: prediction.id } }"
     class="block bg-dark-light rounded-xl p-4 hover:bg-dark-lighter transition-colors"
+    :class="userBet?.status === 'placed' ? 'border-l-4 border-primary' : ''"
   >
     <div class="flex items-start justify-between gap-3 mb-3">
       <h3 class="font-semibold text-white flex-1">{{ prediction.name }}</h3>
@@ -114,6 +115,10 @@ const timeRemaining = computed(() => {
       <div v-if="timeRemaining" class="text-xs text-primary font-medium">
         {{ timeRemaining }}
       </div>
+    </div>
+
+    <div v-if="userBet?.status === 'placed'" class="mt-2 text-xs text-primary font-medium">
+      You bet {{ userBet.amount }} tokens
     </div>
   </router-link>
 </template>
