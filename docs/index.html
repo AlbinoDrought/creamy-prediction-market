@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creamy Prediction Market</title>
+<meta name="description" content="The creamiest selfhosted prediction market. Host a fun betting game with friends using fake tokens.">
+<meta property="og:title" content="Creamy Prediction Market">
+<meta property="og:description" content="The creamiest selfhosted prediction market. Host a fun betting game with friends using fake tokens.">
+<meta property="og:image" content="img/logo.png">
+<link rel="icon" href="img/logo.png">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0b0f19;
+  --surface: #141a2a;
+  --surface2: #1c2438;
+  --border: #2a3450;
+  --text: #e2e8f0;
+  --text-muted: #8892a8;
+  --accent: #f6c744;
+  --accent2: #22c55e;
+  --gradient: linear-gradient(135deg, #f6c744, #f97316, #ec4899);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Layout */
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+section { padding: 80px 0; }
+
+/* Hero */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(246,199,68,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: 28px;
+  margin-bottom: 32px;
+  filter: drop-shadow(0 0 40px rgba(246,199,68,0.2));
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+
+.hero h1 span {
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero p {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  max-width: 520px;
+  margin: 0 auto 40px;
+}
+
+.btn-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn:hover { transform: translateY(-2px); text-decoration: none; }
+
+.btn-primary {
+  background: var(--accent);
+  color: #0b0f19;
+  box-shadow: 0 4px 24px rgba(246,199,68,0.25);
+}
+.btn-primary:hover { box-shadow: 0 8px 32px rgba(246,199,68,0.35); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-outline:hover { border-color: var(--text-muted); }
+
+/* Features */
+.features { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+.section-label {
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 48px;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.feature-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.feature-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+.feature-icon {
+  font-size: 2rem;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.feature-card h3 { font-size: 1.15rem; margin-bottom: 8px; }
+.feature-card p { color: var(--text-muted); font-size: 0.95rem; }
+
+/* Screenshots */
+.screenshots { text-align: center; }
+
+.phone-scroll {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 20px 0 32px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.phone-scroll::-webkit-scrollbar { height: 6px; }
+.phone-scroll::-webkit-scrollbar-track { background: transparent; }
+.phone-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.phone-frame {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  width: 260px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  transition: transform 0.2s;
+}
+.phone-frame:hover { transform: scale(1.03); }
+.phone-frame:first-child { margin-left: auto; }
+.phone-frame:last-child { margin-right: auto; }
+
+.phone-frame img {
+  width: 100%;
+  display: block;
+}
+
+.phone-label {
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-align: center;
+  background: var(--surface2);
+}
+
+/* Quickstart */
+.quickstart { text-align: center; }
+
+.code-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  margin: 0 auto;
+  max-width: 700px;
+  text-align: left;
+  overflow-x: auto;
+}
+
+.code-block pre {
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  font-size: 0.9rem;
+  line-height: 1.8;
+  color: var(--text-muted);
+}
+
+.code-block .comment { color: #4a5568; }
+.code-block .cmd { color: var(--text); }
+.code-block .flag { color: var(--accent); }
+.code-block .string { color: var(--accent2); }
+
+.quickstart .note {
+  margin-top: 24px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+footer .footer-links {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  section { padding: 60px 0; }
+  .phone-frame { width: 220px; }
+  .phone-frame:first-child { margin-left: 24px; }
+  .phone-frame:last-child { margin-right: 24px; }
+  .code-block { padding: 20px; }
+  .code-block pre { font-size: 0.8rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <img src="img/logo.png" alt="Creamy Prediction Market logo" class="hero-logo">
+    <h1>Creamy <span>Prediction Market</span></h1>
+    <p>The creamiest selfhosted prediction market. Host a fun betting game with friends using fake tokens at your next party, game day, or watch party.</p>
+    <div class="btn-row">
+      <a href="https://github.com/AlbinoDrought/creamy-prediction-market" class="btn btn-primary">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        View on GitHub
+      </a>
+      <a href="#quickstart" class="btn btn-outline">Quick Start</a>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features">
+  <div class="container">
+    <div class="section-label">Features</div>
+    <h2 class="section-title">Everything you need for game day</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="feature-icon">🎯</span>
+        <h3>Live Predictions</h3>
+        <p>Create custom predictions with multiple choices. Real-time odds update as players place bets.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🏆</span>
+        <h3>Leaderboard</h3>
+        <p>Competitive rankings with player avatars, cosmetic titles, and achievement badges.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🎖️</span>
+        <h3>85+ Achievements</h3>
+        <p>From "First Bet" to "Dumpster Fire" - unlock hidden achievements and flex on your friends.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🛍️</span>
+        <h3>Cosmetic Shop</h3>
+        <p>Earn coins to buy hats, name effects, avatar emojis, titles, and more from the in-game shop.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🦖</span>
+        <h3>Dino Minigame</h3>
+        <p>A Chrome dino-style runner game to earn extra coins between predictions.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📡</span>
+        <h3>Real-time Updates</h3>
+        <p>Server-sent events push live odds, results, and achievement unlocks instantly to every player.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Screenshots -->
+<section class="screenshots">
+  <div class="container">
+    <div class="section-label">Screenshots</div>
+    <h2 class="section-title">See it in action</h2>
+  </div>
+  <div class="phone-scroll">
+    <div class="phone-frame">
+      <img src="img/home.png" alt="Home screen with open predictions" loading="lazy">
+      <div class="phone-label">Open Predictions</div>
+    </div>
+    <div class="phone-frame">
+      <img src="img/betting.png" alt="Placing a bet with amount selector" loading="lazy">
+      <div class="phone-label">Place Your Bet</div>
+    </div>
+    <div class="phone-frame">
+      <img src="img/achievement.png" alt="Achievement unlocked popup" loading="lazy">
+      <div class="phone-label">Achievement Unlocked</div>
+    </div>
+    <div class="phone-frame">
+      <img src="img/result.png" alt="Prediction decided with winning payout" loading="lazy">
+      <div class="phone-label">Results &amp; Payouts</div>
+    </div>
+    <div class="phone-frame">
+      <img src="img/leaderboard.png" alt="Leaderboard with cosmetics" loading="lazy">
+      <div class="phone-label">Leaderboard</div>
+    </div>
+    <div class="phone-frame">
+      <img src="img/shop.png" alt="Cosmetic shop with hats" loading="lazy">
+      <div class="phone-label">Cosmetic Shop</div>
+    </div>
+  </div>
+</section>
+
+<!-- Quickstart -->
+<section class="quickstart" id="quickstart">
+  <div class="container">
+    <div class="section-label">Get Started</div>
+    <h2 class="section-title">Up and running in 30 seconds</h2>
+    <div class="code-block">
+      <pre><span class="comment"># Pull and run with Docker</span>
+<span class="cmd">docker run</span> <span class="flag">--rm</span> <span class="flag">-p</span> <span class="string">3000:3000</span> <span class="flag">-e</span> <span class="string">CREAMY_PM_CONFIG='{"admin_pin":"1234","starting_tokens":1000,"starting_coins":5}'</span> \
+  <span class="string">ghcr.io/albinodrought/creamy-prediction-market:latest</span></pre>
+    </div>
+    <p class="note">Then open <a href="http://localhost:3000">localhost:3000</a> - log in as <strong>Admin</strong> with your pin to create predictions.</p>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="footer-links">
+      <a href="https://github.com/AlbinoDrought/creamy-prediction-market">GitHub</a>
+      <a href="https://github.com/AlbinoDrought/creamy-prediction-market/blob/master/LICENSE">AGPL-3.0</a>
+      <a href="https://github.com/AlbinoDrought/creamy-prediction-market/issues">Issues</a>
+    </div>
+    <p>Made for game days, watch parties, and friendly bets.</p>
+  </div>
+</footer>
+
+</body>
+</html>
