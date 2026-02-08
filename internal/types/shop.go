@@ -169,6 +169,26 @@ var AllShopItems = []ShopItem{
 	{ID: "title_winning", Category: ShopItemCategoryTitle, Name: "Winning", Price: 0, Value: "Winning", Locked: true},
 	{ID: "title_dino_whisperer", Category: ShopItemCategoryTitle, Name: "Dino Whisperer", Price: 0, Value: "Dino Whisperer", Locked: true},
 
+	// Titles - PTO & Work-Life Balance
+	{ID: "title_pto_aficionado", Category: ShopItemCategoryTitle, Name: "PTO Aficionado", Price: 10, Value: "PTO Aficionado"},
+	{ID: "title_ooo", Category: ShopItemCategoryTitle, Name: "Out Of Office", Price: 5, Value: "Out Of Office"},
+
+	// Titles - Security / Red Team vs Blue Team
+	{ID: "title_red_team", Category: ShopItemCategoryTitle, Name: "Red Team", Price: 10, Value: "Red Team"},
+	{ID: "title_blue_team", Category: ShopItemCategoryTitle, Name: "Blue Team", Price: 10, Value: "Blue Team"},
+	{ID: "title_it_was_dns", Category: ShopItemCategoryTitle, Name: "It Was DNS", Price: 10, Value: "It Was DNS"},
+
+	// Titles - Sports (Ironic)
+	{ID: "title_go_sports", Category: ShopItemCategoryTitle, Name: "Go Sports!!!", Price: 5, Value: "Go Sports!!!"},
+	{ID: "title_ref_is_blind", Category: ShopItemCategoryTitle, Name: "The Ref Is Blind", Price: 10, Value: "The Ref Is Blind"},
+	{ID: "title_here_for_snacks", Category: ShopItemCategoryTitle, Name: "Here For The Snacks", Price: 5, Value: "Here For The Snacks"},
+
+	// Titles - Office Life
+	{ID: "title_reply_all", Category: ShopItemCategoryTitle, Name: "Reply All Offender", Price: 10, Value: "Reply All Offender"},
+	{ID: "title_meeting_survivor", Category: ShopItemCategoryTitle, Name: "Meeting Survivor", Price: 10, Value: "Meeting Survivor"},
+	{ID: "title_could_be_email", Category: ShopItemCategoryTitle, Name: "Could've Been An Email", Price: 15, Value: "Could've Been An Email"},
+	{ID: "title_muted_on_zoom", Category: ShopItemCategoryTitle, Name: "You're On Mute", Price: 5, Value: "You're On Mute"},
+
 	// Hats
 	{ID: "hat_crown", Category: ShopItemCategoryHat, Name: "Crown", Price: 20, Icon: "👑", Value: "👑"},
 	{ID: "hat_tophat", Category: ShopItemCategoryHat, Name: "Top Hat", Price: 15, Icon: "🎩", Value: "🎩"},
