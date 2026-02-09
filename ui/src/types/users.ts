@@ -33,6 +33,7 @@ export interface LeaderboardUser {
     id: string;
     name: string;
     tokens: number;
+    score: number;
     rank: number;
     achievements: string[];
     cosmetics: UserCosmetics;

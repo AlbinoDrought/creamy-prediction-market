@@ -585,19 +585,36 @@ func (h *Handler) ShowLeaderboard(w http.ResponseWriter, r *http.Request) {
 		if u.Admin {
 			continue // exclude admins from leaderboard
 		}
+
+		// Calculate loss-forgiveness score:
+		// score = tokens - startingTokens + min(totalLostOrAtRisk, startingTokens)
+		// This means the first startingTokens worth of losses/pending bets don't count.
+		var totalLostOrAtRisk int64
+		for _, bet := range h.Store.ListBetsByUser(u.ID) {
+			if bet.Status == types.BetStatusPlaced || bet.Status == types.BetStatusLost {
+				totalLostOrAtRisk += bet.Amount
+			}
+		}
+		forgiveness := totalLostOrAtRisk
+		if forgiveness > h.StartingTokens {
+			forgiveness = h.StartingTokens
+		}
+		score := u.Tokens - h.StartingTokens + forgiveness
+
 		leaderboard = append(leaderboard, types.LeaderboardUser{
 			ID:           u.ID,
 			Name:         u.Name,
 			Tokens:       u.Tokens,
+			Score:        score,
 			Achievements: h.Store.GetUserAchievementIDs(u.ID),
 			Cosmetics:    h.Store.GetUserCosmetics(u.ID),
 		})
 	}
 
-	// Sort by tokens descending
+	// Sort by score descending
 	sort.Slice(leaderboard, func(i, j int) bool {
-		if leaderboard[i].Tokens != leaderboard[j].Tokens {
-			return leaderboard[i].Tokens > leaderboard[j].Tokens
+		if leaderboard[i].Score != leaderboard[j].Score {
+			return leaderboard[i].Score > leaderboard[j].Score
 		}
 		return strings.Compare(leaderboard[i].ID, leaderboard[j].ID) == -1
 	})

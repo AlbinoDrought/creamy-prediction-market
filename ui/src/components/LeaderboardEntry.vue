@@ -78,12 +78,12 @@ const rankClass = computed(() => {
       </div>
     </div>
 
-    <!-- Tokens -->
+    <!-- Score -->
     <div class="text-right">
-      <p class="font-bold" :class="isCurrentUser ? 'text-primary' : 'text-white'">
-        {{ user.tokens }}
+      <p class="font-bold" :class="user.score > 0 ? 'text-success' : user.score < 0 ? 'text-error' : 'text-gray-400'">
+        {{ user.score > 0 ? '+' : '' }}{{ user.score }}
       </p>
-      <p class="text-xs text-gray-400">tokens</p>
+      <p class="text-xs text-gray-400">score</p>
     </div>
   </div>
 </template>

@@ -38,6 +38,7 @@ type LeaderboardUser struct {
 	ID           string        `json:"id"`
 	Name         string        `json:"name"`
 	Tokens       int64         `json:"tokens"`
+	Score        int64         `json:"score"`
 	Rank         int           `json:"rank"`
 	Achievements []string      `json:"achievements"`
 	Cosmetics    UserCosmetics `json:"cosmetics"`
